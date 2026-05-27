@@ -1,0 +1,211 @@
+/* exobios-frontend/dashboard.css */
+:root {
+    --bg-main: #0f172a;
+    --bg-panel: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --border-color: #334155;
+    --alert-red-bg: rgba(239, 68, 68, 0.15);
+    --alert-red-text: #ef4444;
+    --status-green: #22c55e;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    padding: 25px 30px;
+    letter-spacing: 1px;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 15px 30px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.nav-link.active {
+    color: var(--text-main);
+    border-left: 3px solid var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.05);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-header {
+    height: 70px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 30px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-indicators {
+    display: flex;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.standby {
+    background-color: var(--text-muted);
+}
+
+.status-dot.online {
+    background-color: var(--status-green);
+}
+
+.content-area {
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    background-color: var(--accent-blue);
+    color: var(--bg-main);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.patient-queue {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.patient-card {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: var(--text-main);
+}
+
+.card-info p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-muted);
+}
+
+.triage-tag {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.tag-critical {
+    background-color: var(--alert-red-bg);
+    color: var(--alert-red-text);
+    border: 1px solid var(--alert-red-text);
+}

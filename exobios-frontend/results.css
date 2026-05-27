@@ -1,0 +1,331 @@
+/* exobios-frontend/results.css */
+
+/* --- Core Variables --- */
+:root {
+    --bg-main: #0f172a;
+    --bg-panel: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --border-color: #334155;
+    --status-green: #22c55e;
+    --alert-red-bg: rgba(239, 68, 68, 0.15);
+    --alert-red-border: #ef4444;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar & Header layout reused */
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    padding: 25px 30px;
+    letter-spacing: 1px;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 15px 30px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.nav-link.active {
+    color: var(--text-main);
+    border-left: 3px solid var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.05);
+}
+
+.nav-link:hover:not(.active) {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-header {
+    height: 70px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-title h2 {
+    margin: 0;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+}
+
+.back-link {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--text-main);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-indicators {
+    display: flex;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.synced {
+    background-color: var(--accent-blue);
+}
+
+.status-dot.online {
+    background-color: var(--status-green);
+}
+
+.content-area {
+    padding: 30px;
+    height: calc(100vh - 70px);
+    box-sizing: border-box;
+}
+
+/* --- TWO COLUMN RESULTS GRID --- */
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    height: 100%;
+}
+
+.protocol-column,
+.chat-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- LEFT: Protocol Cards --- */
+.result-card {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 25px;
+}
+
+.card-title {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: var(--accent-blue);
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.alert-banner.critical {
+    background-color: var(--alert-red-bg);
+    border: 1px solid var(--alert-red-border);
+    color: var(--alert-red-border);
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.action-list {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+.action-list li {
+    margin-bottom: 10px;
+}
+
+.routing-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    padding-bottom: 8px;
+}
+
+.detail-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.detail-value {
+    font-weight: 600;
+}
+
+.detail-value.highlight {
+    color: var(--accent-blue);
+}
+
+.detail-value.success {
+    color: var(--status-green);
+}
+
+/* --- RIGHT: Chat UI --- */
+.chat-container {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chat-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ai-badge {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: var(--status-green);
+    border: 1px solid var(--status-green);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.chat-history {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ai-bubble {
+    align-self: flex-start;
+    background-color: rgba(56, 189, 248, 0.05);
+    border: 1px solid var(--border-color);
+    border-top-left-radius: 0;
+}
+
+.user-bubble {
+    align-self: flex-end;
+    background-color: var(--accent-blue);
+    color: var(--bg-main);
+    font-weight: 600;
+    border-top-right-radius: 0;
+}
+
+.chat-input-area {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 12px 15px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.btn-send {
+    background-color: var(--accent-blue);
+    color: var(--bg-main);
+    border: none;
+    padding: 0 20px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-send:hover {
+    opacity: 0.9;
+}

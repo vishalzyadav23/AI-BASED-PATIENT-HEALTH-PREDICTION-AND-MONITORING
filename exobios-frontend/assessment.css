@@ -1,0 +1,329 @@
+/* exobios-frontend/assessment.css */
+:root {
+    --bg-main: #0f172a;
+    --bg-panel: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --border-color: #334155;
+    --status-green: #22c55e;
+    --warning-yellow: #fbbf24;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar & Header layout */
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    padding: 25px 30px;
+    letter-spacing: 1px;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 15px 30px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.nav-link.active {
+    color: var(--text-main);
+    border-left: 3px solid var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.05);
+}
+
+.nav-link:hover:not(.active) {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-header {
+    height: 70px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-title h2 {
+    margin: 0;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--text-main);
+}
+
+.back-link {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--accent-blue);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-indicators {
+    display: flex;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.standby {
+    background-color: var(--text-muted);
+}
+
+.status-dot.online {
+    background-color: var(--status-green);
+}
+
+.content-area {
+    padding: 30px;
+    overflow-y: auto;
+    height: calc(100vh - 70px);
+    box-sizing: border-box;
+}
+
+/* --- TWO COLUMN GRID --- */
+.assessment-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
+    height: 100%;
+}
+
+.form-panel,
+.telemetry-panel {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-title {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: var(--accent-blue);
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+/* --- FORM INPUTS --- */
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    flex: 1;
+}
+
+.form-group.half {
+    flex: 2;
+}
+
+.form-group.quarter {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+/* --- TELEMETRY STYLES --- */
+.telemetry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.telemetry-header .panel-title {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.btn-sync {
+    background-color: transparent;
+    color: var(--accent-blue);
+    border: 1px solid var(--accent-blue);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-sync:hover {
+    background-color: rgba(56, 189, 248, 0.1);
+}
+
+.vitals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    flex: 1;
+}
+
+.vital-card {
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.vital-card.full-width {
+    grid-column: span 2;
+}
+
+.vital-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.vital-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.ecg-awaiting {
+    font-size: 18px;
+    color: var(--warning-yellow);
+}
+
+.vital-unit {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* --- ACTION FOOTER --- */
+.action-footer {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.warning-text {
+    font-size: 12px;
+    color: var(--warning-yellow);
+    margin-bottom: 15px;
+}
+
+.btn-generate {
+    width: 100%;
+    background-color: var(--accent-blue);
+    color: var(--bg-main);
+    border: none;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+.btn-generate:hover {
+    opacity: 0.9;
+}

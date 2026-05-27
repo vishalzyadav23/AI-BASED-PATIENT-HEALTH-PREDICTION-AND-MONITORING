@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Database
+*.db
+
+# Secret files
+*.txt
+
+# VS Code
+.vscode/
+
+# Node modules
+node_modules/
+
+# OS files
+Thumbs.db
+.DS_Store

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exobios Clinical - Secure Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           MODERN CLINICAL AI THEME 
+           ========================================= */
+        body {
+            background-color: #060b19 !important;
+            background-image: linear-gradient(rgba(20, 184, 166, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(20, 184, 166, 0.05) 1px, transparent 1px) !important;
+            background-size: 30px 30px !important;
+            background-position: center center;
+            animation: gridMove 20s linear infinite;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: -30px 30px;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .clinical-panel {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 4px solid #14b8a6;
+            border-radius: 12px;
+            padding: 40px 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .view-section {
+            display: none;
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        .form-title {
+            color: #5eead4;
+            font-size: 15px;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input,
+        textarea {
+            background: #060b19;
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #5eead4;
+            box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+        }
+
+        .btn-primary {
+            background: #14b8a6;
+            color: #060b19;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5eead4;
+            box-shadow: 0 6px 20px rgba(20, 184, 166, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+
+        /* NEW: Danger button for Emergency Intake */
+        .btn-danger {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
+
+        /* NEW: Alert Banner */
+        .alert-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            color: #fca5a5;
+            padding: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .text-link {
+            color: #94a3b8;
+            font-size: 12px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            background: none;
+            border: none;
+            padding: 0;
+            display: inline-block;
+        }
+
+        .text-link:hover {
+            color: #5eead4;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .otp-inputs input {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            padding: 12px;
+            letter-spacing: 0;
+            border: 2px solid rgba(20, 184, 166, 0.3);
+        }
+
+        .otp-inputs input:focus {
+            border-color: #5eead4;
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 250px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #f8fafc;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #3b82f6;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toast-container"></div>
+    <div class="auth-wrapper">
+        <div class="clinical-panel">
+            <div class="brand-header">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px;">
+                    <path d="M12 2v20M2 12h20" />
+                </svg><br>
+                <span
+                    style="color: #f8fafc; font-size: 20px; font-weight: 800; letter-spacing: 1.5px;">EXOBIOS</span><br>
+                <span style="color: #14b8a6; font-size: 11px; font-weight: 700; letter-spacing: 3px;">CLINICAL AI</span>
+            </div>
+
+            <div id="view-login" class="view-section active">
+                <h3 class="form-title">System Login</h3>
+                <div class="form-group"><label>Email Address</label><input type="text" id="login-email"
+                        placeholder="registered@email.com" autocomplete="off"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="login-password"
+                        placeholder="••••••••"></div>
+                <button class="btn-primary" id="btn-login" onclick="handleLogin()">Authorize Access</button>
+                <div class="flex-between">
+                    <button class="text-link" onclick="switchView('view-forgot-request')">Forgot Password?</button>
+                    <button class="text-link" style="color: #14b8a6;" onclick="switchView('view-otp-request')">Register
+                        Account</button>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 30px 0 20px;">
+
+                <button class="btn-danger" onclick="switchView('view-patient-intake')">I am a Patient / Emergency
+                    Walk-in</button>
+            </div>
+
+            <div id="view-patient-intake" class="view-section">
+                <h3 class="form-title" style="color: #ef4444;">Self-Reported Emergency</h3>
+
+                <div class="alert-banner">
+                    WARNING: If this is a life-threatening emergency, call your local emergency number (e.g., 911 / 112)
+                    IMMEDIATELY. Do not wait for a digital response!
+                </div>
+
+                <div class="row">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="intake-name"
+                            placeholder="John Doe"></div>
+                    <div class="form-group"><label>Phone Number</label><input type="text" id="intake-phone"
+                            placeholder="Optional"></div>
+                </div>
+                <div class="form-group"><label>Email Address (For Confirmation)</label><input type="email"
+                        id="intake-email" placeholder="name@gmail.com"></div>
+
+                <div class="form-group">
+                    <label>Current Symptoms</label>
+                    <textarea id="intake-symptoms" rows="3"
+                        placeholder="Chest pain, difficulty breathing, bleeding, etc."></textarea>
+                </div>
+
+                <button class="btn-primary"
+                    style="background: #ef4444; color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);"
+                    id="btn-submit-intake" onclick="handlePatientIntake()">Share Location & Send Alert</button>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="text-link" onclick="switchView('view-login')">← Back to Login</button>
+                </div>
+            </div>
+
+            <div id="view-otp-request" class="view-section">
+                <h3 class="form-title">Account Verification</h3>
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-bottom: 20px;">Enter your Gmail
+                    address to receive a secure OTP.</p>
+                <div class="form-group"><label>Email Address</label><input type="text" id="reg-contact"
+                        placeholder="name@gmail.com"></div>
+                <button class="btn-primary" id="btn-send-otp" onclick="handleSendOTP()">Send OTP</button>
+                <div style="text-align: center; margin-top: 20px;"><button class="text-link"
+                        onclick="switchView('view-login')">← Back to Login</button></div>
+            </div>
+
+            <div id="view-otp-verify" class="view-section">
+                <h3 class="form-title">Verify Identity</h3>
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-bottom: 20px;">Enter the 4-digit
+                    code sent to your email.</p>
+                <div class="otp-inputs">
+                    <input type="text" maxlength="1" onkeyup="moveToNext(this, 'otp2')" id="otp1">
+                    <input type="text" id="otp2" maxlength="1" onkeyup="moveToNext(this, 'otp3')">
+                    <input type="text" id="otp3" maxlength="1" onkeyup="moveToNext(this, 'otp4')">
+                    <input type="text" id="otp4" maxlength="1">
+                </div>
+                <button class="btn-primary" id="btn-verify-otp" onclick="handleVerifyOTP()">Verify Code</button>
+                <div style="text-align: center; margin-top: 20px;"><button class="text-link"
+                        onclick="switchView('view-otp-request')">Resend Code</button></div>
+            </div>
+
+            <div id="view-profile" class="view-section">
+                <h3 class="form-title">Complete Profile</h3>
+                <div class="row">
+                    <div class="form-group"><label>First Name</label><input type="text" id="reg-first"></div>
+                    <div class="form-group"><label>Last Name</label><input type="text" id="reg-last"></div>
+                </div>
+                <div class="row">
+                    <div class="form-group"><label>Phone Number</label><input type="text" id="reg-phone"></div>
+                    <div class="form-group"><label>PIN Code</label><input type="text" id="reg-pin"></div>
+                </div>
+                <div class="row">
+                    <div class="form-group"><label>Area Location</label><input type="text" id="reg-area"></div>
+                    <div class="form-group"><label>Region</label><input type="text" id="reg-region"></div>
+                </div>
+                <div class="form-group"><label>Set Password</label><input type="password" id="reg-password"></div>
+                <button class="btn-primary" id="btn-create-account" onclick="handleCompleteRegistration()">Complete
+                    Registration</button>
+            </div>
+
+            <div id="view-forgot-request" class="view-section">
+                <h3 class="form-title">Password Recovery</h3>
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-bottom: 20px;">Enter your
+                    registered email. We will send a secure verification code.</p>
+                <div class="form-group"><label>Registered Email</label><input type="email" id="recovery-email"
+                        placeholder="name@gmail.com"></div>
+                <button class="btn-primary" id="btn-recover-request" onclick="handlePasswordResetRequest()">Send
+                    Recovery Code</button>
+                <div style="text-align: center; margin-top: 20px;"><button class="text-link"
+                        onclick="switchView('view-login')">← Back to Login</button></div>
+            </div>
+
+            <div id="view-forgot-reset" class="view-section">
+                <h3 class="form-title">Set New Password</h3>
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-bottom: 20px;">Enter the 4-digit
+                    code sent to your email and your new secure password.</p>
+                <div class="otp-inputs">
+                    <input type="text" maxlength="1" onkeyup="moveToNext(this, 'rotp2')" id="rotp1">
+                    <input type="text" id="rotp2" maxlength="1" onkeyup="moveToNext(this, 'rotp3')">
+                    <input type="text" id="rotp3" maxlength="1" onkeyup="moveToNext(this, 'rotp4')">
+                    <input type="text" id="rotp4" maxlength="1">
+                </div>
+                <div class="form-group"><label>New Security Password</label><input type="password" id="new-password"
+                        placeholder="••••••••"></div>
+                <button class="btn-primary" id="btn-recover-confirm" onclick="handlePasswordResetConfirm()">Update
+                    Password</button>
+                <div style="text-align: center; margin-top: 20px;"><button class="text-link"
+                        onclick="switchView('view-forgot-request')">Cancel</button></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api";
+        let verifiedContact = "";
+        let recoveryContact = "";
+
+        function showToast(message, color = '#14b8a6') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast'; toast.style.borderLeftColor = color; toast.innerHTML = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function moveToNext(current, nextFieldID) {
+            if (current.value.length >= current.maxLength) document.getElementById(nextFieldID).focus();
+        }
+
+        // ==========================================
+        // FLOW 1: LOGIN
+        // ==========================================
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-login');
+
+            if (!email || !pass) return showToast("Enter credentials.", "#ef4444");
+
+            btn.textContent = "AUTHORIZING..."; btn.disabled = true;
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personnel_id: email, password: pass })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('exobios_token', data.access_token);
+                    showToast("Access Granted. Initializing Dashboard...", "#22c55e");
+                    setTimeout(() => window.location.href = 'dashboard.html', 1000);
+                } else {
+                    showToast("Access Denied. Invalid credentials.", "#ef4444");
+                    btn.textContent = "AUTHORIZE ACCESS"; btn.disabled = false;
+                }
+            } catch (err) {
+                showToast("Server Offline.", "#ef4444");
+                btn.textContent = "AUTHORIZE ACCESS"; btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // FLOW 2: PUBLIC EMERGENCY INTAKE (NEW)
+        // ==========================================
+        async function handlePatientIntake() {
+            const name = document.getElementById('intake-name').value.trim();
+            const email = document.getElementById('intake-email').value.trim();
+            const phone = document.getElementById('intake-phone').value.trim();
+            const symptoms = document.getElementById('intake-symptoms').value.trim();
+            const btn = document.getElementById('btn-submit-intake');
+
+            if (!name || !email || !symptoms) {
+                return showToast("Name, Email, and Symptoms are required.", "#eab308");
+            }
+
+            btn.textContent = "ACQUIRING GPS & SENDING...";
+            btn.disabled = true;
+
+            // Secure HTML5 Geolocation Wrapper
+            const getPosition = () => {
+                return new Promise((resolve) => {
+                    if (!navigator.geolocation) {
+                        resolve({ lat: null, lng: null });
+                    } else {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
+                            (error) => resolve({ lat: null, lng: null }), // Failsafe if user denies location
+                            { timeout: 5000 } // Don't hang forever during an emergency
+                        );
+                    }
+                });
+            };
+
+            const coords = await getPosition();
+
+            const payload = {
+                name: name,
+                email: email,
+                phone: phone,
+                symptoms: symptoms,
+                latitude: coords.lat,
+                longitude: coords.lng
+            };
+
+            try {
+                // This targets the new backend endpoint we are about to build
+                const response = await fetch(`${API_BASE}/intake/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    showToast("Alert Sent! The hospital is preparing for your arrival.", "#22c55e");
+                    setTimeout(() => switchView('view-login'), 3000);
+
+                    // Clear the form for safety
+                    document.getElementById('intake-name').value = '';
+                    document.getElementById('intake-email').value = '';
+                    document.getElementById('intake-phone').value = '';
+                    document.getElementById('intake-symptoms').value = '';
+                } else {
+                    showToast("System error. Call emergency services immediately.", "#ef4444");
+                }
+            } catch (err) {
+                showToast("Network Error. Call emergency services immediately.", "#ef4444");
+            }
+
+            btn.textContent = "SHARE LOCATION & SEND ALERT";
+            btn.disabled = false;
+        }
+
+        // ==========================================
+        // FLOW 3: OTP REQUEST
+        // ==========================================
+        async function handleSendOTP() {
+            const contact = document.getElementById('reg-contact').value.trim();
+            if (!contact || !contact.includes('@')) return showToast("Enter a valid email address.", "#eab308");
+            verifiedContact = contact;
+            const btn = document.getElementById('btn-send-otp');
+            btn.textContent = "ROUTING EMAIL..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/otp/send`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: verifiedContact })
+                });
+                if (response.ok) {
+                    showToast(`Secure OTP dispatched to ${verifiedContact}`, "#14b8a6");
+                    switchView('view-otp-verify');
+                } else {
+                    const err = await response.json();
+                    showToast(err.detail || "Failed to send email.", "#ef4444");
+                }
+            } catch (err) { showToast("Network Error.", "#ef4444"); }
+            btn.textContent = "SEND OTP"; btn.disabled = false;
+        }
+
+        // ==========================================
+        // FLOW 4: OTP VERIFICATION
+        // ==========================================
+        async function handleVerifyOTP() {
+            const fullOtp = document.getElementById('otp1').value + document.getElementById('otp2').value + document.getElementById('otp3').value + document.getElementById('otp4').value;
+            if (fullOtp.length !== 4) return showToast("Enter the full code.", "#eab308");
+            const btn = document.getElementById('btn-verify-otp');
+            btn.textContent = "VERIFYING..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/otp/verify`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: verifiedContact, otp: fullOtp })
+                });
+                if (response.ok) {
+                    showToast("Identity Confirmed.", "#22c55e");
+                    switchView('view-profile');
+                } else { showToast("Invalid or Expired Code.", "#ef4444"); }
+            } catch (err) { showToast("Network Error.", "#ef4444"); }
+            btn.textContent = "VERIFY CODE"; btn.disabled = false;
+        }
+
+        // ==========================================
+        // FLOW 5: PROGRESSIVE PROFILING & REGISTRATION
+        // ==========================================
+        async function handleCompleteRegistration() {
+            const btn = document.getElementById('btn-create-account');
+            const pass = document.getElementById('reg-password').value;
+
+            const payload = {
+                personnel_id: verifiedContact,
+                name: `${document.getElementById('reg-first').value.trim()} ${document.getElementById('reg-last').value.trim()}`.trim(),
+                phone: document.getElementById('reg-phone').value.trim(),
+                pin_code: document.getElementById('reg-pin').value.trim(),
+                area_location: document.getElementById('reg-area').value.trim(),
+                region: document.getElementById('reg-region').value.trim(),
+                password: pass,
+                role: "Paramedic"
+            };
+
+            if (!payload.name || !pass) return showToast("Name and Password are required.", "#eab308");
+
+            btn.textContent = "SAVING TO DATABASE..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    showToast("PostgreSQL Entry Created! Please log in.", "#22c55e");
+                    document.getElementById('login-email').value = verifiedContact;
+                    switchView('view-login');
+                } else {
+                    const err = await response.json();
+                    showToast(err.detail || "Registration failed.", "#ef4444");
+                }
+            } catch (err) { showToast("Database Offline.", "#ef4444"); }
+            btn.textContent = "COMPLETE REGISTRATION"; btn.disabled = false;
+        }
+
+        // ==========================================
+        // FLOW 6: SECURE FORGOT PASSWORD
+        // ==========================================
+        async function handlePasswordResetRequest() {
+            const email = document.getElementById('recovery-email').value.trim();
+            if (!email) return showToast("Enter your registered email.", "#eab308");
+
+            recoveryContact = email;
+            const btn = document.getElementById('btn-recover-request');
+            btn.textContent = "ROUTING EMAIL..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/password-reset/request`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: recoveryContact })
+                });
+                if (response.ok) {
+                    showToast("If registered, a recovery code was sent.", "#14b8a6");
+                    switchView('view-forgot-reset');
+                }
+            } catch (err) { showToast("Network Error.", "#ef4444"); }
+            btn.textContent = "SEND RECOVERY CODE"; btn.disabled = false;
+        }
+
+        async function handlePasswordResetConfirm() {
+            const fullOtp = document.getElementById('rotp1').value + document.getElementById('rotp2').value + document.getElementById('rotp3').value + document.getElementById('rotp4').value;
+            const newPassword = document.getElementById('new-password').value;
+
+            if (fullOtp.length !== 4 || !newPassword) return showToast("Enter code and new password.", "#eab308");
+
+            const btn = document.getElementById('btn-recover-confirm');
+            btn.textContent = "UPDATING..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/password-reset/confirm`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: recoveryContact, otp: fullOtp, new_password: newPassword })
+                });
+                if (response.ok) {
+                    showToast("Password updated successfully. Please login.", "#22c55e");
+                    switchView('view-login');
+                } else {
+                    const err = await response.json();
+                    showToast(err.detail || "Invalid code.", "#ef4444");
+                }
+            } catch (err) { showToast("Network Error.", "#ef4444"); }
+            btn.textContent = "UPDATE PASSWORD"; btn.disabled = false;
+        }
+    </script>
+</body>
+
+</html>
