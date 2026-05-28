@@ -2,11 +2,9 @@
 ```
 AI BASED PATIENT HEALTH PREDICTION AND MONITORING
 ├─ exobios-backend
-│  ├─ .env
 │  ├─ ARDUINO_INTEGRATION.md
 │  ├─ check_models.py
 │  ├─ database.py
-│  ├─ exobios.db
 │  ├─ firebase_notifications.py
 │  ├─ FIREBASE_SETUP.md
 │  ├─ health_prediction.py
@@ -15,7 +13,6 @@ AI BASED PATIENT HEALTH PREDICTION AND MONITORING
 │  ├─ models.py
 │  ├─ QUICK_START_SENSOR.md
 │  ├─ QUICK_START_THREE_FEATURES.md
-│  ├─ requirements.txt
 │  ├─ schemas.py
 │  ├─ security.py
 │  ├─ SENSOR_DATA_PROCESSING.md
@@ -25,18 +22,7 @@ AI BASED PATIENT HEALTH PREDICTION AND MONITORING
 │  ├─ test_sensor_processing.py
 │  ├─ test_three_features.py
 │  ├─ timeseries_analysis.py
-│  ├─ TREND_SEPSIS_NOTIFICATIONS_API.md
-│  └─ __pycache__
-│     ├─ database.cpython-314.pyc
-│     ├─ firebase_notifications.cpython-314.pyc
-│     ├─ health_prediction.cpython-314.pyc
-│     ├─ main.cpython-314.pyc
-│     ├─ models.cpython-314.pyc
-│     ├─ schemas.cpython-314.pyc
-│     ├─ security.cpython-314.pyc
-│     ├─ sensor_processor.cpython-314.pyc
-│     ├─ sepsis_risk.cpython-314.pyc
-│     └─ timeseries_analysis.cpython-314.pyc
+│  └─ TREND_SEPSIS_NOTIFICATIONS_API.md
 ├─ exobios-frontend
 │  ├─ assessment.css
 │  ├─ assessment.html
@@ -46,7 +32,6 @@ AI BASED PATIENT HEALTH PREDICTION AND MONITORING
 │  ├─ results.css
 │  ├─ results.html
 │  └─ style.css
-├─ Google App Password- rglb lidh xuxw.txt
 ├─ README.md
 └─ TEMP_mar11b
    └─ TEMP_mar11b.ino

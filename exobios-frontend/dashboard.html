@@ -365,7 +365,7 @@
         }
 
         /* =========================================
-           HISTORY MODAL STYLES (NEW FEATURE)
+           HISTORY MODAL STYLES
            ========================================= */
         .modal-overlay {
             position: fixed;
@@ -548,26 +548,16 @@
                         and internal health records are strictly omitted from this log for compliance.</p>
                 </div>
 
-                <div class="data-row">
-                    <span class="data-label">Patient Name</span>
-                    <span class="data-value" id="hist-name">--</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">Exobios Reg ID</span>
-                    <span class="data-value" id="hist-id">--</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">Date & Time Logged</span>
-                    <span class="data-value" id="hist-time" style="color: #4ade80;">--</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">Reported Symptoms</span>
-                    <span class="data-value" id="hist-symptoms">--</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">Dispatch Status</span>
-                    <span class="data-value" style="color: #facc15;">Active - Field Operative Assigned</span>
-                </div>
+                <div class="data-row"><span class="data-label">Patient Name</span><span class="data-value"
+                        id="hist-name">--</span></div>
+                <div class="data-row"><span class="data-label">Exobios Reg ID</span><span class="data-value"
+                        id="hist-id">--</span></div>
+                <div class="data-row"><span class="data-label">Date & Time Logged</span><span class="data-value"
+                        id="hist-time" style="color: #4ade80;">--</span></div>
+                <div class="data-row"><span class="data-label">Reported Symptoms</span><span class="data-value"
+                        id="hist-symptoms">--</span></div>
+                <div class="data-row"><span class="data-label">Dispatch Status</span><span class="data-value"
+                        style="color: #facc15;">Active - Field Operative Assigned</span></div>
 
                 <div class="quick-actions">
                     <div class="quick-btn" onclick="showToast('Initiating secure VOIP call...', '#38bdf8')">📞 Call
@@ -612,8 +602,7 @@
                 <div class="section-header">
                     <h3 class="section-title" style="color: #ef4444;">🚨 PENDING PUBLIC EMERGENCIES</h3>
                 </div>
-                <div class="queue-list" id="pending-list">
-                </div>
+                <div class="queue-list" id="pending-list"></div>
             </div>
 
             <div class="glass-panel animate-entry delay-2">
@@ -628,15 +617,21 @@
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
 
     <script>
-        const API_BASE = "http://127.0.0.1:8000/api";
+        // =========================================================================
+        // 🚀 LIVE PRODUCTION API LINK
+        // Replace 'YOUR_RENDER_ID' with the actual URL from your Render dashboard!
+        // Example: "https://exobios-api-abc1.onrender.com/api"
+        // =========================================================================
+        const API_BASE = "https://exobios-api.onrender.com";
+        // const API_BASE = "http://127.0.0.1:8000/api"; // <-- Keep this commented out for local testing
+
         let token = "";
         let pendingIntakesList = [];
-        let activeOpStartTime = null; // Used for the live timer
+        let activeOpStartTime = null;
 
         // Utility: Toast Function
         function showToast(message, color = '#3b82f6') {
@@ -655,7 +650,6 @@
             document.getElementById('hist-id').textContent = `EXO-${id.toString().padStart(4, '0')}`;
             document.getElementById('hist-symptoms').textContent = symptoms || 'No primary complaint logged';
 
-            // Format the Date beautifully for Standard Time
             const date = new Date(timeString);
             const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             document.getElementById('hist-time').textContent = date.toLocaleDateString('en-US', options);
@@ -685,10 +679,7 @@
         // Fetch Pending Public Intakes
         async function fetchPendingIntakes() {
             try {
-                const response = await fetch(`${API_BASE}/intake/pending`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
+                const response = await fetch(`${API_BASE}/intake/pending`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (response.ok) {
                     const intakes = await response.json();
                     const panel = document.getElementById('pending-intakes-panel');
@@ -717,22 +708,17 @@
                         panel.style.display = 'none';
                     }
                 }
-            } catch (err) {
-                console.error("Error fetching pending intakes", err);
-            }
+            } catch (err) { console.error("Error fetching pending intakes", err); }
         }
 
         // Acknowledge a public intake AND bridge data
         async function acknowledgeIntake(id) {
             try {
                 const patientData = pendingIntakesList.find(p => p.id == id);
-                if (patientData) {
-                    localStorage.setItem('exobios_autofill', JSON.stringify(patientData));
-                }
+                if (patientData) { localStorage.setItem('exobios_autofill', JSON.stringify(patientData)); }
 
                 const response = await fetch(`${API_BASE}/intake/${id}/acknowledge`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
@@ -741,18 +727,13 @@
                 } else {
                     showToast("Failed to acknowledge intake.", "#ef4444");
                 }
-            } catch (err) {
-                showToast("Network Error.", "#ef4444");
-            }
+            } catch (err) { showToast("Network Error.", "#ef4444"); }
         }
 
         // Fetch Real Patient Queue
         async function fetchActiveQueue() {
             try {
-                const response = await fetch(`${API_BASE}/predict/history/1`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
+                const response = await fetch(`${API_BASE}/predict/history/1`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const queueBody = document.getElementById('patient-list');
 
                 if (response.ok) {
@@ -762,10 +743,7 @@
                         const patient = data[0];
                         const statusClass = patient.priority_level === "CRITICAL" || patient.priority_level === "HIGH" ? "badge-critical" : "badge-stable";
 
-                        // Setup the timer base using the backend creation time, or fallback to now
                         activeOpStartTime = patient.created_at ? new Date(patient.created_at) : new Date();
-
-                        // Safety check for names and missing symptoms for the history panel
                         const safeName = patient.name ? patient.name.replace(/'/g, "\\'") : "Unknown";
                         const safeSymptoms = patient.symptoms ? patient.symptoms.replace(/'/g, "\\'") : "None provided";
                         const safeTime = patient.created_at ? patient.created_at : new Date().toISOString();
@@ -783,12 +761,8 @@
                                 </div>
                             </div>
                         `;
-                    } else {
-                        queueBody.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 20px;">Queue is empty. No active operations.</div>`;
-                    }
-                } else {
-                    queueBody.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 20px;">Queue is empty. No active operations.</div>`;
-                }
+                    } else { queueBody.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 20px;">Queue is empty. No active operations.</div>`; }
+                } else { queueBody.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 20px;">Queue is empty. No active operations.</div>`; }
             } catch (err) {
                 console.error("Queue fetch error:", err);
                 document.getElementById('patient-list').innerHTML = `<div style="text-align: center; color: #ef4444; padding: 20px;">Error connecting to database.</div>`;

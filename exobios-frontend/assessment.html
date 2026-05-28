@@ -548,6 +548,11 @@
     </div>
 
     <script>
+        // =========================================================================
+        // 🚀 LIVE PRODUCTION API LINK
+        // =========================================================================
+        const API_BASE = "https://exobios-api.onrender.com/api";
+
         document.addEventListener('DOMContentLoaded', () => {
 
             function showToast(message, color = '#3b82f6') {
@@ -620,7 +625,7 @@
                 syncBtn.style.opacity = "0.7";
 
                 try {
-                    const response = await fetch('http://127.0.0.1:8000/api/telemetry', {
+                    const response = await fetch(`${API_BASE}/telemetry`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
 
@@ -714,7 +719,7 @@
                 };
 
                 try {
-                    const response = await fetch('http://127.0.0.1:8000/api/predict/health', {
+                    const response = await fetch(`${API_BASE}/predict/health`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

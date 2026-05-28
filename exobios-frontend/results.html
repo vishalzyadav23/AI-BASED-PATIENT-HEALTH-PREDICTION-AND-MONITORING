@@ -508,7 +508,7 @@
 
                     <button id="btn-simulate-crash"
                         style="background-color: transparent; border: 1px solid rgba(239, 68, 68, 0.5); color: #ef4444; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; backdrop-filter: blur(4px);">
-                        ⚠ TEST CRASH
+                        ⚠️ TEST CRASH
                     </button>
 
                     <button id="btn-download-pdf"
@@ -546,7 +546,7 @@
 
                     <div class="result-card animate-entry delay-2"
                         style="background: rgba(220, 38, 38, 0.1); border-color: rgba(239, 68, 68, 0.3); padding: 15px 25px;">
-                        <strong style="color: #ef4444;">⚠ CRITICAL ALERT:</strong> <span
+                        <strong style="color: #ef4444;">⚠️ CRITICAL ALERT:</strong> <span
                             style="color: #fca5a5;">Suspected Acute Anterior STEMI based on 12-Lead ECG findings.</span>
                     </div>
 
@@ -614,6 +614,11 @@
     </div>
 
     <script>
+        // =========================================================================
+        // 🚀 LIVE PRODUCTION API LINK
+        // =========================================================================
+        const API_BASE = "https://exobios-api.onrender.com/api";
+
         document.addEventListener('DOMContentLoaded', async () => {
 
             function showToast(message, type = 'info') {
@@ -645,7 +650,8 @@
 
             let currentPatientName = "UNKNOWN";
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/patients/latest', {
+                // UPDATE 1: Fetching latest patient using Live API
+                const response = await fetch(`${API_BASE}/patients/latest`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -704,7 +710,7 @@
 
                 document.getElementById('main-body').classList.add('emergency-active');
                 document.getElementById('dynamic-header').classList.add('emergency-header');
-                document.getElementById('telemetry-title').textContent = "⚠ CRITICAL TELEMETRY STREAM ⚠";
+                document.getElementById('telemetry-title').textContent = "⚠️ CRITICAL TELEMETRY STREAM ⚠️";
                 document.getElementById('telemetry-title').classList.add('emergency-text');
                 document.getElementById('spo2-label').style.color = "#ef4444";
 
@@ -718,7 +724,7 @@
                 aiBubble.style.backgroundColor = 'rgba(127, 29, 29, 0.5)';
                 aiBubble.style.color = '#fca5a5';
                 aiBubble.style.border = '1px solid rgba(239, 68, 68, 0.5)';
-                aiBubble.innerHTML = `<strong>⚠ AI CORE OVERRIDE:</strong> Patient vitals have crashed below safe thresholds. <br><br><strong>ACTION:</strong> Administer High-Flow Oxygen immediately. Prepare for Advanced Cardiac Life Support (ACLS) protocols.`;
+                aiBubble.innerHTML = `<strong>⚠️ AI CORE OVERRIDE:</strong> Patient vitals have crashed below safe thresholds. <br><br><strong>ACTION:</strong> Administer High-Flow Oxygen immediately. Prepare for Advanced Cardiac Life Support (ACLS) protocols.`;
 
                 chatHistory.appendChild(aiBubble);
                 chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -728,7 +734,8 @@
 
             async function fetchLiveTelemetry() {
                 try {
-                    const response = await fetch('http://127.0.0.1:8000/api/telemetry');
+                    // UPDATE 2: Fetching live telemetry using Live API
+                    const response = await fetch(`${API_BASE}/telemetry`);
                     if (response.ok) {
                         const data = await response.json();
                         document.getElementById('live-bpm').textContent = data.bpm !== "--" ? data.bpm : "--";
@@ -825,7 +832,8 @@
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
                 try {
-                    const response = await fetch('http://127.0.0.1:8000/api/chat', {
+                    // UPDATE 3: Fetching AI Chat response using Live API
+                    const response = await fetch(`${API_BASE}/chat`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
