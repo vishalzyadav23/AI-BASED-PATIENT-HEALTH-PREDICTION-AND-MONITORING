@@ -448,6 +448,7 @@
             </header>
 
             <div class="assessment-grid">
+
                 <div class="glass-panel animate-entry delay-1">
                     <h3 class="panel-title">PATIENT DEMOGRAPHICS & HISTORY</h3>
 
@@ -500,6 +501,7 @@
                 <div class="glass-panel animate-entry delay-2" style="display: flex; flex-direction: column;">
                     <div class="telemetry-header">
                         <h3 class="panel-title" style="margin: 0;">LIVE TELEMETRY</h3>
+
                         <button id="btn-sync">SYNC LIVE DATA</button>
                     </div>
 
@@ -579,25 +581,33 @@
             }
 
             // ==========================================
-            // FEATURE 3: THE AUTO-FILL BRIDGE
+            // FEATURE 3: THE AUTO-FILL BRIDGE (BUG FIX APPLIED)
             // ==========================================
             const autoFillData = localStorage.getItem('exobios_autofill');
+
             if (autoFillData) {
                 try {
                     const patientData = JSON.parse(autoFillData);
 
-                    // Auto-type the patient's name and symptoms instantly
-                    document.getElementById('patient-name').value = patientData.name || '';
-                    document.getElementById('patient-symptoms').value = patientData.symptoms || '';
+                    // Delay typing by 100ms to ensure the browser has fully built the HTML inputs!
+                    setTimeout(() => {
+                        const nameInput = document.getElementById('patient-name');
+                        const sympInput = document.getElementById('patient-symptoms');
 
-                    showToast(`Alert Acknowledged. Auto-filled data for ${patientData.name}`, "#14b8a6");
+                        if (nameInput) nameInput.value = patientData.name || '';
+                        if (sympInput) sympInput.value = patientData.symptoms || '';
 
-                    // Clean up memory so it doesn't auto-fill the next time a paramedic opens the page manually
-                    localStorage.removeItem('exobios_autofill');
+                        showToast(`Alert Acknowledged. Auto-filled data for ${patientData.name}`, "#14b8a6");
+
+                        // Clean up memory
+                        localStorage.removeItem('exobios_autofill');
+                    }, 100);
+
                 } catch (e) {
                     console.error("Auto-fill parsing error", e);
                 }
             }
+
 
             // ==========================================
             // FEATURE 1: SYNC STRICT REAL HARDWARE DATA
@@ -619,9 +629,12 @@
 
                         // STRICT CHECK: ONLY accept data if it's NOT the placeholder "--"
                         if (data.bpm && data.bpm !== "--") {
+
                             document.getElementById('val-hr').textContent = data.bpm;
                             document.getElementById('val-spo2').textContent = data.spo2;
                             document.getElementById('val-temp').textContent = data.temperature;
+
+                            // If hardware supplies BP, use it. Otherwise leave as --/--
                             document.getElementById('val-bp').textContent = data.systolic_bp ? `${data.systolic_bp}/${data.diastolic_bp}` : "--/--";
 
                             document.getElementById('ecg-text').textContent = "Hardware Signal Locked. Ready.";
@@ -633,6 +646,7 @@
                             syncBtn.style.borderColor = "rgba(34, 197, 94, 0.5)";
                             showToast("Real-time hardware telemetry synced successfully.", "#22c55e");
                         } else {
+                            // Hardware is running, but no data in the buffer yet
                             showToast("No active sensor data. Please check Arduino connection.", "#f59e0b");
                         }
                     } else {
@@ -642,6 +656,7 @@
                     showToast("Server offline or disconnected.", "#ef4444");
                 }
 
+                // Only reset the button text if it didn't succeed
                 if (syncBtn.textContent !== "DATA SECURED") {
                     setTimeout(() => {
                         syncBtn.textContent = ogText;
@@ -656,14 +671,16 @@
             const generateBtn = document.getElementById('btn-generate');
 
             generateBtn.addEventListener('click', async () => {
+
+                // 1. Validate Basic Info
                 const name = document.getElementById('patient-name').value.trim();
                 const age = document.getElementById('patient-age').value.trim();
-
                 if (!name || !age) {
                     showToast("Please enter Patient Name and Age.", "#eab308");
                     return;
                 }
 
+                // 2. STRICT VALIDATION: Ensure real hardware data is synced
                 const currentHR = document.getElementById('val-hr').textContent;
                 if (currentHR === "--") {
                     showToast("Please Sync real hardware data before generating a protocol.", "#ef4444");
@@ -673,12 +690,13 @@
                 generateBtn.textContent = "ANALYZING VITALS & GENERATING PROTOCOL...";
                 generateBtn.style.opacity = "0.8";
 
+                // Safe parsing of Blood Pressure if the hardware doesn't supply it
                 const bpText = document.getElementById('val-bp').textContent;
                 const sysBP = bpText !== "--/--" ? parseInt(bpText.split('/')[0]) : 120;
                 const diaBP = bpText !== "--/--" ? parseInt(bpText.split('/')[1]) : 80;
 
                 const patientPayload = {
-                    patient_id: Math.floor(Math.random() * 10000),
+                    patient_id: 1, // FIX: Set exactly to 1 so the Dashboard finds it!
                     name: name,
                     age: parseInt(age) || 0,
                     sex: document.getElementById('patient-sex').value,
