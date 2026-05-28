@@ -1,8 +1,6 @@
 # backend/main.py
 import os
-import smtplib
 import random
-from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import json
+import resend # <--- MODERN EMAIL API SDK
 
 # --- The modern, official Google GenAI SDK ---
 from dotenv import load_dotenv
@@ -29,7 +28,9 @@ from firebase_notifications import notification_manager
 # Load the secret .env file
 load_dotenv()
 
-# Configure the new Gemini Client
+# Configure APIs
+resend.api_key = os.getenv("RESEND_API_KEY")
+
 api_key = os.getenv("GEMINI_API_KEY")
 if api_key:
     gemini_client = genai.Client(api_key=api_key)
@@ -60,7 +61,7 @@ class LoginRequest(BaseModel):
     password: str
 
 # ==========================================
-# OTP AUTHENTICATION SYSTEM
+# OTP AUTHENTICATION SYSTEM (UPDATED TO RESEND API)
 # ==========================================
 OTP_STORE = {}
 
@@ -73,28 +74,26 @@ class OTPVerify(BaseModel):
 
 @app.post("/api/otp/send")
 def send_otp(request: OTPRequest):
-    sender_email = os.getenv("SENDER_EMAIL")
-    sender_password = os.getenv("SENDER_PASSWORD")
-    
-    if not sender_email or not sender_password or sender_email == "your_actual_email@gmail.com":
-        raise HTTPException(status_code=500, detail="Email server not configured in .env")
+    if not resend.api_key:
+        raise HTTPException(status_code=500, detail="RESEND_API_KEY not configured in environment.")
 
     otp_code = str(random.randint(1000, 9999))
     OTP_STORE[request.email] = otp_code
     
     try:
-        msg = MIMEText(f"Your Exobios Clinical secure verification code is: {otp_code}\n\nDo not share this code with anyone.")
-        msg['Subject'] = "Exobios Verification Code"
-        msg['From'] = f"Exobios Security <{sender_email}>"
-        msg['To'] = request.email
-        
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-            
+        resend.Emails.send({
+            "from": "onboarding@resend.dev", # Resend's default testing address
+            "to": request.email,
+            "subject": "Exobios Verification Code",
+            "html": f"""
+                <h2>EXOBIOS SYSTEM LOGIN</h2>
+                <p>Your secure verification code is: <strong>{otp_code}</strong></p>
+                <p>Do not share this code with anyone.</p>
+            """
+        })
         return {"message": "OTP sent successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to route email: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to route email via Resend API: {str(e)}")
 
 @app.post("/api/otp/verify")
 def verify_otp(request: OTPVerify):
@@ -123,24 +122,24 @@ def request_password_reset(request: PasswordResetRequest, db: Session = Depends(
     if not user:
         return {"message": "If registered, an OTP has been sent."}
     
-    sender_email = os.getenv("SENDER_EMAIL")
-    sender_password = os.getenv("SENDER_PASSWORD")
-    
     otp_code = str(random.randint(1000, 9999))
     OTP_STORE[request.email] = otp_code
     
-    try:
-        msg = MIMEText(f"We received a request to reset your password.\n\nYour secure reset code is: {otp_code}\n\nIf you did not request this, please ignore this email.")
-        msg['Subject'] = "Exobios Password Reset Request"
-        msg['From'] = f"Exobios Security <{sender_email}>"
-        msg['To'] = request.email
-        
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-    except Exception as e:
-        print(f"Failed to send reset email: {e}")
-        
+    if resend.api_key:
+        try:
+            resend.Emails.send({
+                "from": "onboarding@resend.dev",
+                "to": request.email,
+                "subject": "Exobios Password Reset Request",
+                "html": f"""
+                    <p>We received a request to reset your password.</p>
+                    <p>Your secure reset code is: <strong>{otp_code}</strong></p>
+                    <p>If you did not request this, please ignore this email.</p>
+                """
+            })
+        except Exception as e:
+            print(f"Failed to send reset email via Resend API: {e}")
+            
     return {"message": "If registered, an OTP has been sent."}
 
 @app.post("/api/password-reset/confirm")
@@ -172,10 +171,10 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = models.User(
         personnel_id=user.personnel_id, 
         name=user.name, 
-        phone=user.phone,                  # POSTGRES FIELD
-        pin_code=user.pin_code,            # POSTGRES FIELD
-        area_location=user.area_location,  # POSTGRES FIELD
-        region=user.region,                # POSTGRES FIELD
+        phone=user.phone,                  
+        pin_code=user.pin_code,            
+        area_location=user.area_location,  
+        region=user.region,                
         hashed_password=hashed_pw, 
         role=user.role
     )
@@ -229,7 +228,6 @@ def get_latest_patient(
 # ==========================================
 # ENDPOINT 5: Advanced Sensor Data Processing
 # ==========================================
-
 @app.post("/api/telemetry/stream", response_model=schemas.SensorProcessingResult)
 def stream_telemetry_data(data: schemas.SensorReadingCreate, db: Session = Depends(get_db)):
     global LATEST_HARDWARE_DATA
@@ -399,7 +397,6 @@ def ai_assist_chat(chat: ChatMessage, token: str = Depends(oauth2_scheme)):
 # ==========================================
 # ENDPOINT 7: Health Prediction & Risk Assessment
 # ==========================================
-
 @app.post("/api/predict/health", response_model=schemas.HealthPredictionResponse)
 def predict_health_risk(
     prediction_data: schemas.HealthPredictionRequest,
@@ -585,7 +582,7 @@ def get_notification_history(patient_id: int, limit: int = 50, db: Session = Dep
 
 
 # ==========================================
-# ENDPOINT 8: PUBLIC EMERGENCY INTAKE (NEW)
+# ENDPOINT 8: PUBLIC EMERGENCY INTAKE 
 # ==========================================
 @app.post("/api/intake/submit", response_model=schemas.SelfReportedIntakeResponse)
 def submit_patient_intake(intake: schemas.SelfReportedIntakeCreate, db: Session = Depends(get_db)):
@@ -595,22 +592,21 @@ def submit_patient_intake(intake: schemas.SelfReportedIntakeCreate, db: Session 
     db.commit()
     db.refresh(new_intake)
 
-    # Automatically send confirmation email to patient
-    sender_email = os.getenv("SENDER_EMAIL")
-    sender_password = os.getenv("SENDER_PASSWORD")
-    
-    if sender_email and sender_password and sender_email != "your_actual_email@gmail.com":
+    if resend.api_key:
         try:
-            msg = MIMEText(f"Dear {intake.name},\n\nYour emergency alert has been received by Exobios Clinical Command Center.\n\nReported Symptoms: {intake.symptoms}\n\nPlease proceed safely to the hospital or call emergency services (911/112) immediately if your condition is life-threatening.")
-            msg['Subject'] = "Exobios Emergency Alert Received"
-            msg['From'] = f"Exobios Triage <{sender_email}>"
-            msg['To'] = intake.email
-            
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                server.login(sender_email, sender_password)
-                server.send_message(msg)
+            resend.Emails.send({
+                "from": "onboarding@resend.dev",
+                "to": intake.email,
+                "subject": "Exobios Emergency Alert Received",
+                "html": f"""
+                    <p>Dear {intake.name},</p>
+                    <p>Your emergency alert has been received by Exobios Clinical Command Center.</p>
+                    <p>Reported Symptoms: <strong>{intake.symptoms}</strong></p>
+                    <p style="color: red;">Please proceed safely to the hospital or call emergency services (911/112) immediately if your condition is life-threatening.</p>
+                """
+            })
         except Exception as e:
-            print(f"Failed to send patient intake confirmation email: {e}")
+            print(f"Failed to send patient intake confirmation email via Resend API: {e}")
             
     return new_intake
 
@@ -631,21 +627,19 @@ def acknowledge_intake(intake_id: int, db: Session = Depends(get_db), token: str
     db.commit()
     db.refresh(intake)
     
-    # Automatically send 'Ready' email to patient
-    sender_email = os.getenv("SENDER_EMAIL")
-    sender_password = os.getenv("SENDER_PASSWORD")
-    
-    if sender_email and sender_password and sender_email != "your_actual_email@gmail.com":
+    if resend.api_key:
         try:
-            msg = MIMEText(f"Dear {intake.name},\n\nThe medical team has acknowledged your emergency status and is actively preparing for your arrival.\n\nStatus: ACKNOWLEDGED.")
-            msg['Subject'] = "Exobios Triage - Preparation Initiated"
-            msg['From'] = f"Exobios Triage <{sender_email}>"
-            msg['To'] = intake.email
-            
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                server.login(sender_email, sender_password)
-                server.send_message(msg)
+            resend.Emails.send({
+                "from": "onboarding@resend.dev",
+                "to": intake.email,
+                "subject": "Exobios Triage - Preparation Initiated",
+                "html": f"""
+                    <p>Dear {intake.name},</p>
+                    <p>The medical team has acknowledged your emergency status and is actively preparing for your arrival.</p>
+                    <p>Status: <strong>ACKNOWLEDGED</strong></p>
+                """
+            })
         except Exception as e:
-            print(f"Failed to send patient ack email: {e}")
+            print(f"Failed to send patient ack email via Resend API: {e}")
             
     return intake
