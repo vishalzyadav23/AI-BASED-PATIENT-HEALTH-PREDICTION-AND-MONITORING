@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caregiver Login - Exobios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #060b19;
+            background-image: linear-gradient(rgba(20, 184, 166, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(20, 184, 166, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: gridMove 20s linear infinite;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: -30px 30px;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .clinical-panel {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 4px solid #14b8a6;
+            border-radius: 12px;
+            padding: 40px 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #5eead4;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-title {
+            color: #5eead4;
+            font-size: 13px;
+            text-transform: uppercase;
+            margin: 0 0 25px 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            background: #060b19;
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #5eead4;
+            box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+        }
+
+        .btn-primary {
+            background: #14b8a6;
+            color: #060b19;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5eead4;
+            box-shadow: 0 6px 20px rgba(20, 184, 166, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+
+        .text-link {
+            color: #94a3b8;
+            font-size: 12px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .text-link:hover {
+            color: #5eead4;
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 250px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.9);
+            border-left: 4px solid #5eead4;
+            border-radius: 6px;
+            animation: slideInToast 0.3s ease;
+        }
+
+        @keyframes slideInToast {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+        }
+
+        .view-section {
+            display: none;
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        .alert-info {
+            background: rgba(56, 189, 248, 0.1);
+            border-left: 3px solid #38bdf8;
+            color: #93c5fd;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-wrapper">
+        <div class="clinical-panel">
+            <div class="brand-header">
+                <div class="brand-title">Exobios</div>
+                <div class="brand-subtitle">Caregiver Portal</div>
+            </div>
+
+            <!-- Login View -->
+            <div id="view-login" class="view-section active">
+                <h2 class="form-title">Caregiver Login</h2>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="login-email" placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••">
+                </div>
+
+                <button class="btn-primary" id="btn-login" onclick="handleCaregiverLogin()">Login</button>
+
+                <div class="flex-center">
+                    <span>Don't have an account?</span>
+                    <button class="text-link" onclick="switchView('view-register')">Register</button>
+                </div>
+            </div>
+
+            <!-- Register View -->
+            <div id="view-register" class="view-section">
+                <h2 class="form-title">Create Caregiver Account</h2>
+
+                <div class="alert-info">
+                    You'll be able to view patient health data once you're invited by a healthcare provider.
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="reg-name" placeholder="John Smith">
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="reg-email" placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-password" placeholder="••••••••">
+                </div>
+
+                <div class="form-group">
+                    <label>Phone (Optional)</label>
+                    <input type="tel" id="reg-phone" placeholder="9876543210">
+                </div>
+
+                <button class="btn-primary" id="btn-register" onclick="handleCaregiverRegister()">Create
+                    Account</button>
+
+                <div class="flex-center">
+                    <span>Already have an account?</span>
+                    <button class="text-link" onclick="switchView('view-login')">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const API_BASE = 'https://exobios-backend.onrender.com/api';
+
+        function showToast(msg, color = '#5eead4') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            toast.style.borderLeftColor = color;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        async function handleCaregiverLogin() {
+            try {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+                const btn = document.getElementById('btn-login');
+
+                if (!email || !password) {
+                    showToast('Please fill in all fields', '#ef4444');
+                    return;
+                }
+
+                btn.disabled = true;
+
+                const response = await fetch(`${API_BASE}/caregivers/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Login failed');
+                }
+
+                localStorage.setItem('caregiverToken', data.access_token);
+                localStorage.setItem('caregiverEmail', email);
+                showToast('Login successful!');
+                setTimeout(() => window.location.href = 'caregiver-dashboard.html', 1000);
+            } catch (e) {
+                showToast('Error: ' + e.message, '#ef4444');
+                document.getElementById('btn-login').disabled = false;
+            }
+        }
+
+        async function handleCaregiverRegister() {
+            try {
+                const name = document.getElementById('reg-name').value.trim();
+                const email = document.getElementById('reg-email').value.trim();
+                const password = document.getElementById('reg-password').value;
+                const phone = document.getElementById('reg-phone').value.trim();
+                const btn = document.getElementById('btn-register');
+
+                if (!name || !email || !password) {
+                    showToast('Please fill in required fields', '#ef4444');
+                    return;
+                }
+
+                btn.disabled = true;
+
+                const response = await fetch(`${API_BASE}/caregivers/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        phone: phone || null,
+                        caregiver_type: 'Family'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Registration failed');
+                }
+
+                showToast('Account created! You can now login.');
+                setTimeout(() => switchView('view-login'), 1500);
+            } catch (e) {
+                showToast('Error: ' + e.message, '#ef4444');
+                document.getElementById('btn-register').disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

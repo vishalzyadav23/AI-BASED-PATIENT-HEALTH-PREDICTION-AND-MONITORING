@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caregiver Dashboard - Exobios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #0f172a 0%, #020617 100%);
+            background-attachment: fixed;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .brand {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #5eead4;
+            padding: 0 10px 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 12px 25px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #5eead4;
+        }
+
+        .nav-menu a.active {
+            background: rgba(94, 234, 212, 0.15);
+            color: #5eead4;
+            border-left: 3px solid #5eead4;
+            padding-left: 22px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .patients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .patient-card {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .patient-card:hover {
+            border-color: rgba(94, 234, 212, 0.5);
+            box-shadow: 0 12px 40px rgba(94, 234, 212, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .patient-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .patient-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .patient-age {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .risk-stable {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .risk-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .risk-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .patient-info {
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .info-label {
+            color: #94a3b8;
+        }
+
+        .info-value {
+            color: #5eead4;
+            font-weight: 600;
+        }
+
+        .patient-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            flex: 1;
+            background: rgba(94, 234, 212, 0.1);
+            border: 1px solid rgba(94, 234, 212, 0.3);
+            color: #5eead4;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn-small:hover {
+            background: rgba(94, 234, 212, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            border: 3px solid rgba(94, 234, 212, 0.2);
+            border-top-color: #5eead4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 250px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.9);
+            border-left: 4px solid #5eead4;
+            border-radius: 6px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .patients-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="brand">Exobios<br>Caregiver</div>
+            <div class="nav-menu">
+                <a href="#" class="active">My Patients</a>
+                <a href="#">Health History</a>
+                <a href="#">Alerts</a>
+            </div>
+            <div style="flex: 1;"></div>
+            <div class="nav-menu" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <a href="#" id="user-email" style="color: #5eead4; cursor: default;">user@email.com</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>My Patients</h1>
+                <button class="btn-logout" id="btn-logout">Logout</button>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading your patients...</p>
+            </div>
+
+            <div id="content" style="display: none;">
+                <div id="patients-container" class="patients-grid"></div>
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <div class="empty-icon">👥</div>
+                    <h2 style="font-size: 18px; margin-bottom: 10px;">No Patients Yet</h2>
+                    <p>You'll see patients here once a healthcare provider adds you as a caregiver.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const API_BASE = 'https://exobios-backend.onrender.com/api';
+
+        function showToast(msg, color = '#5eead4') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            toast.style.borderLeftColor = color;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function getCaregiverToken() {
+            const token = localStorage.getItem('caregiverToken');
+            if (!token) {
+                window.location.href = 'caregiver-login.html';
+                return null;
+            }
+            return token;
+        }
+
+        async function loadPatients() {
+            try {
+                const token = getCaregiverToken();
+                const response = await fetch(`${API_BASE}/caregiver/my-patients`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load patients');
+
+                const patients = await response.json();
+
+                const email = localStorage.getItem('caregiverEmail');
+                document.getElementById('user-email').textContent = email;
+
+                displayPatients(patients);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            } catch (e) {
+                showToast('Error: ' + e.message, '#ef4444');
+                document.getElementById('loading').innerHTML = '<p style="color: #ef4444;">Error loading patients</p>';
+            }
+        }
+
+        function displayPatients(patients) {
+            const container = document.getElementById('patients-container');
+            const empty = document.getElementById('empty-state');
+
+            if (patients.length === 0) {
+                container.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = patients.map(p => {
+                const riskClass = p.current_risk_level === 'CRITICAL' ? 'risk-critical' :
+                    p.current_risk_level === 'ALERT' ? 'risk-warning' : 'risk-stable';
+                return `
+                    <div class="patient-card">
+                        <div class="patient-card-header">
+                            <div>
+                                <div class="patient-name">${p.patient_name}</div>
+                                <div class="patient-age">${p.patient_age} years • ${p.patient_sex}</div>
+                            </div>
+                            <span class="risk-badge ${riskClass}">${p.current_risk_level || 'UNKNOWN'}</span>
+                        </div>
+
+                        <div class="patient-info">
+                            <div class="info-row">
+                                <span class="info-label">Relationship</span>
+                                <span class="info-value">${p.relationship_to_patient}</span>
+                            </div>
+                            ${p.latest_vitals ? `
+                                <div class="info-row">
+                                    <span class="info-label">Heart Rate</span>
+                                    <span class="info-value">${p.latest_vitals.heart_rate} bpm</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">SpO2</span>
+                                    <span class="info-value">${p.latest_vitals.spo2}%</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Temp</span>
+                                    <span class="info-value">${p.latest_vitals.temperature}°C</span>
+                                </div>
+                            ` : '<div class="info-row"><span class="info-label">No recent data</span></div>'}
+                            ${p.allergies ? `
+                                <div class="info-row">
+                                    <span class="info-label">Allergies</span>
+                                    <span class="info-value">${p.allergies}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="patient-actions">
+                            <button class="btn-small" onclick="viewPatientHistory(${p.patient_id})">View History</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewPatientHistory(patientId) {
+            window.location.href = `caregiver-patient-history.html?id=${patientId}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPatients();
+            document.getElementById('btn-logout').addEventListener('click', () => {
+                localStorage.removeItem('caregiverToken');
+                localStorage.removeItem('caregiverEmail');
+                window.location.href = 'caregiver-login.html';
+            });
+        });
+    </script>
+</body>
+
+</html>

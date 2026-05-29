@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Patient Access - Exobios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #0f172a 0%, #020617 100%);
+            background-attachment: fixed;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            padding: 20px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-back {
+            background: rgba(94, 234, 212, 0.1);
+            border: 1px solid rgba(94, 234, 212, 0.3);
+            color: #5eead4;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(94, 234, 212, 0.2);
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel h2 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #5eead4;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input,
+        select {
+            background: #060b19;
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            outline: none;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #5eead4;
+            box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background: #14b8a6;
+            color: #060b19;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5eead4;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.5);
+            color: #5eead4;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid rgba(94, 234, 212, 0.2);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(94, 234, 212, 0.05);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .btn-small {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn-small:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: #5eead4;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(94, 234, 212, 0.2);
+            border-top-color: #5eead4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 250px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.9);
+            border-left: 4px solid #5eead4;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Manage Patient Access</h1>
+            <button class="btn-back" onclick="window.history.back()">Back</button>
+        </div>
+
+        <!-- Invite Caregiver Form -->
+        <div class="panel">
+            <h2>📧 Invite Caregiver</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Caregiver Email</label>
+                    <input type="email" id="invite-email" placeholder="caregiver@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Relationship</label>
+                    <select id="invite-relationship">
+                        <option value="">Select relationship</option>
+                        <option value="Family">Family</option>
+                        <option value="Friend">Friend</option>
+                        <option value="Healthcare Provider">Healthcare Provider</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Permission Level</label>
+                    <select id="invite-permission">
+                        <option value="VIEW">View Only</option>
+                        <option value="MANAGE">Manage Alerts</option>
+                        <option value="EDIT_ALERTS">Edit Alerts</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Permissions</label>
+                    <div
+                        style="padding: 10px; background: #060b19; border-radius: 6px; border: 1px solid rgba(20,184,166,0.3);">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
+                            <input type="checkbox" id="invite-alerts" checked>
+                            <span style="font-size: 11px; color: #94a3b8;">Receive Alerts</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="invite-sensitive">
+                            <span style="font-size: 11px; color: #94a3b8;">View Sensitive Data</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" id="btn-invite" onclick="inviteCaregiver()">Send Invitation</button>
+        </div>
+
+        <!-- Active Access List -->
+        <div class="panel">
+            <h2>👥 Active Caregiver Access</h2>
+            <div id="access-list" class="table-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading access list...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="modal-confirm" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Remove Access?</div>
+            <p id="modal-message" style="color: #94a3b8; font-size: 12px; margin-bottom: 20px;"></p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="confirmRemoveAccess()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const API_BASE = 'https://exobios-backend.onrender.com/api';
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get('id');
+        let selectedAccessId = null;
+
+        function showToast(msg, color = '#5eead4') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            toast.style.borderLeftColor = color;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function getToken() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'index.html';
+                return null;
+            }
+            return token;
+        }
+
+        async function inviteCaregiver() {
+            try {
+                const email = document.getElementById('invite-email').value.trim();
+                const relationship = document.getElementById('invite-relationship').value;
+                const permLevel = document.getElementById('invite-permission').value;
+                const canAlert = document.getElementById('invite-alerts').checked;
+                const canSensitive = document.getElementById('invite-sensitive').checked;
+                const btn = document.getElementById('btn-invite');
+
+                if (!email || !relationship) {
+                    showToast('Please fill in all required fields', '#ef4444');
+                    return;
+                }
+
+                btn.disabled = true;
+
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/patients/${patientId}/add-caregiver-access`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        caregiver_email: email,
+                        relationship_to_patient: relationship,
+                        permission_level: permLevel,
+                        can_receive_alerts: canAlert,
+                        can_view_sensitive_data: canSensitive
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to invite caregiver');
+                }
+
+                showToast('Invitation sent successfully!');
+                document.getElementById('invite-email').value = '';
+                document.getElementById('invite-relationship').value = '';
+                loadAccessList();
+            } catch (e) {
+                showToast('Error: ' + e.message, '#ef4444');
+            } finally {
+                document.getElementById('btn-invite').disabled = false;
+            }
+        }
+
+        async function loadAccessList() {
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/patients/${patientId}/caregiver-access`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load access list');
+
+                const accesses = await response.json();
+
+                let html = '';
+                if (accesses.length === 0) {
+                    html = '<div class="empty-state">No caregivers assigned yet</div>';
+                } else {
+                    html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Relationship</th>
+                                    <th>Permission</th>
+                                    <th>Alerts</th>
+                                    <th>Sensitive Data</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${accesses.map(a => `
+                                    <tr>
+                                        <td>${a.caregiver_email}</td>
+                                        <td>${a.relationship_to_patient}</td>
+                                        <td>${a.permission_level}</td>
+                                        <td>${a.can_receive_alerts ? '✓' : '✗'}</td>
+                                        <td>${a.can_view_sensitive_data ? '✓' : '✗'}</td>
+                                        <td>
+                                            <span class="status-badge ${a.is_active ? 'status-active' : 'status-pending'}">
+                                                ${a.is_active ? 'Active' : 'Pending'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn-small" onclick="removeAccess(${a.id}, '${a.caregiver_email}')">Remove</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                document.getElementById('access-list').innerHTML = html;
+            } catch (e) {
+                document.getElementById('access-list').innerHTML =
+                    `<div class="empty-state" style="color: #ef4444;">Error: ${e.message}</div>`;
+            }
+        }
+
+        function removeAccess(accessId, email) {
+            selectedAccessId = accessId;
+            document.getElementById('modal-message').textContent =
+                `Remove ${email}'s access to this patient's data?`;
+            document.getElementById('modal-confirm').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-confirm').classList.remove('active');
+        }
+
+        async function confirmRemoveAccess() {
+            try {
+                const token = getToken();
+                const response = await fetch(
+                    `${API_BASE}/patients/caregiver-access/${selectedAccessId}`,
+                    {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }
+                );
+
+                if (!response.ok) throw new Error('Failed to remove access');
+
+                showToast('Access removed successfully');
+                closeModal();
+                loadAccessList();
+            } catch (e) {
+                showToast('Error: ' + e.message, '#ef4444');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!patientId) {
+                document.getElementById('access-list').innerHTML =
+                    '<div class="empty-state" style="color: #ef4444;">Invalid patient ID</div>';
+            } else {
+                loadAccessList();
+            }
+        });
+    </script>
+</body>
+
+</html>
