@@ -475,6 +475,86 @@
         .emergency-text {
             animation: text-blink 1s infinite !important;
         }
+
+        /* =========================================
+           📱 MOBILE RESPONSIVENESS FIX
+           ========================================= */
+        @media (max-width: 850px) {
+
+            /* 1. Stack the entire app vertically */
+            .app-container {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            /* 2. Turn the sidebar into a scrollable top-navigation */
+            .sidebar {
+                width: 100%;
+                padding: 15px 10px 5px 10px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .brand {
+                padding: 0 0 15px 0;
+                font-size: 14px;
+            }
+
+            .nav-menu {
+                display: flex;
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 10px;
+                white-space: nowrap;
+                /* Keeps links on one line */
+            }
+
+            .nav-menu a {
+                padding: 10px 15px;
+                font-size: 13px;
+                margin: 0 5px;
+            }
+
+            /* 3. Stack all grid columns vertically (1fr = 1 full row) */
+            .assessment-grid,
+            .results-grid,
+            .vitals-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            /* 4. Stack form inputs vertically */
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            /* 5. Adjust headers to wrap nicely */
+            .top-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .user-info {
+                flex-wrap: wrap;
+            }
+
+            /* 6. Fix the main content scrolling */
+            .main-content {
+                overflow-y: visible;
+                padding: 10px;
+            }
+
+            /* 7. Give the chat box a fixed height on mobile */
+            .chat-container {
+                height: 500px;
+            }
+        }
     </style>
 </head>
 
