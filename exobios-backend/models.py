@@ -221,3 +221,151 @@ class SelfReportedIntake(Base):
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ==========================================
+# NEW: PATIENT MANAGEMENT SYSTEM
+# ==========================================
+
+class PatientMedicalHistory(Base):
+    """Detailed medical history and pre-existing conditions for each patient"""
+    __tablename__ = "patient_medical_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, nullable=False, index=True)
+    
+    # Chronic Conditions (comma-separated or JSON)
+    chronic_conditions = Column(Text, nullable=True)  # e.g., "Diabetes, Hypertension, Asthma"
+    
+    # Allergies & Intolerances
+    allergies = Column(Text, nullable=True)  # e.g., "Penicillin, Peanuts"
+    
+    # Previous Surgeries
+    previous_surgeries = Column(Text, nullable=True)  # e.g., "Appendectomy (2015), Knee Surgery (2020)"
+    
+    # Family History (genetic risk factors)
+    family_history = Column(Text, nullable=True)  # e.g., "Heart disease (Father), Diabetes (Mother)"
+    
+    # Current Medications (more detailed than Patient table)
+    medications = Column(Text, nullable=True)  # JSON format recommended
+    
+    # Immunization Status
+    immunization_status = Column(Text, nullable=True)  # e.g., "COVID-19 (2x), Flu (Yes)"
+    
+    # Blood Type
+    blood_type = Column(String, nullable=True)  # O+, A-, etc.
+    
+    # Height & Weight (for BMI calculation)
+    height_cm = Column(Float, nullable=True)
+    weight_kg = Column(Float, nullable=True)
+    
+    # Lifestyle Information
+    smoking_status = Column(String, nullable=True)  # Never, Former, Current
+    alcohol_consumption = Column(String, nullable=True)  # Never, Occasional, Regular, Heavy
+    
+    # Notes from healthcare provider
+    notes = Column(Text, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class EmergencyContact(Base):
+    """Emergency contact information for patients"""
+    __tablename__ = "emergency_contacts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, nullable=False, index=True)
+    
+    # Contact Information
+    name = Column(String, nullable=False)
+    relationship = Column(String, nullable=False)  # Father, Mother, Spouse, Sibling, Friend, Other
+    phone_primary = Column(String, nullable=False)
+    phone_secondary = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    
+    # Address Information
+    address = Column(Text, nullable=True)
+    city = Column(String, nullable=True)
+    state = Column(String, nullable=True)
+    pin_code = Column(String, nullable=True)
+    
+    # Priority Level
+    priority = Column(Integer, default=1)  # 1 = Primary, 2 = Secondary, 3 = Tertiary
+    
+    # Notes
+    notes = Column(Text, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Caregiver(Base):
+    """Family members and caregivers who can access patient data"""
+    __tablename__ = "caregivers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # User Information (similar to User model)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
+    
+    # Relationship to patient(s)
+    # Note: Relationship to specific patient stored in PatientAccess table
+    
+    # Caregiver Type
+    caregiver_type = Column(String, nullable=False)  # Family, Professional, Friend, Other
+    
+    # Contact Information
+    address = Column(Text, nullable=True)
+    city = Column(String, nullable=True)
+    state = Column(String, nullable=True)
+    pin_code = Column(String, nullable=True)
+    
+    # Account Status
+    is_active = Column(Integer, default=1)  # 1 = Active, 0 = Inactive/Blocked
+    
+    # Verification
+    is_verified = Column(Integer, default=0)  # 1 = Email verified, 0 = Not verified
+    verification_token = Column(String, nullable=True)
+    verification_token_expires_at = Column(DateTime, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PatientAccess(Base):
+    """Relationship between caregivers and patients they can access"""
+    __tablename__ = "patient_access"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, nullable=False, index=True)
+    caregiver_id = Column(Integer, nullable=False, index=True)
+    
+    # Relationship (to the patient)
+    relationship = Column(String, nullable=False)  # Mother, Father, Spouse, Child, Doctor, Nurse, etc.
+    
+    # Permission Level
+    permission_level = Column(String, default="VIEW")  # VIEW (read-only), MANAGE (can update), EDIT_ALERTS (can manage alerts)
+    
+    # Can this caregiver receive alerts?
+    can_receive_alerts = Column(Integer, default=1)  # 1 = Yes, 0 = No
+    
+    # Can this caregiver view sensitive data? (medications, allergies, etc.)
+    can_view_sensitive_data = Column(Integer, default=1)  # 1 = Yes, 0 = No
+    
+    # Access Status
+    is_active = Column(Integer, default=1)  # 1 = Active, 0 = Revoked
+    
+    # Who approved this access?
+    approved_by = Column(String, nullable=True)  # Patient email or Paramedic ID
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    approved_at = Column(DateTime, nullable=True)
+    revoked_at = Column(DateTime, nullable=True)

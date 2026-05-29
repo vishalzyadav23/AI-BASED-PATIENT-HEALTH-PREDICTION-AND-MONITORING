@@ -24,6 +24,7 @@ from sensor_processor import sensor_processor
 from timeseries_analysis import trend_analyzer
 from sepsis_risk import sepsis_calculator
 from firebase_notifications import notification_manager
+from patient_management import router as patient_router
 
 # Load the secret .env file
 load_dotenv()
@@ -42,7 +43,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AI Based Patient Health Prediction & Monitoring API", version="1.0")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+oauth2_scheme = security.oauth2_scheme
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,6 +52,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Patient Management Router
+app.include_router(patient_router)
 
 LATEST_HARDWARE_DATA = {
     "bpm": "--", "spo2": "--", "temperature": "--", "systolic_bp": None, "diastolic_bp": None

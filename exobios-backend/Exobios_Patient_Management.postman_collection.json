@@ -1,0 +1,449 @@
+{
+  "info": {
+    "name": "Exobios Patient Management API",
+    "description": "Complete API testing for Patient Management Feature",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Register Paramedic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personnel_id\": \"P001\",\n  \"password\": \"paramedic123\",\n  \"name\": \"Dr. Smith\",\n  \"phone\": \"9876543210\",\n  \"region\": \"Karnataka\",\n  \"role\": \"Paramedic\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "register"]
+            }
+          }
+        },
+        {
+          "name": "2. Paramedic Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personnel_id\": \"P001\",\n  \"password\": \"paramedic123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "login"]
+            }
+          }
+        },
+        {
+          "name": "3. Register Caregiver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mother@example.com\",\n  \"name\": \"Mary Doe\",\n  \"password\": \"caregiver123\",\n  \"phone\": \"9876543213\",\n  \"caregiver_type\": \"Family\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/caregivers/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "caregivers", "register"]
+            }
+          }
+        },
+        {
+          "name": "4. Caregiver Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mother@example.com\",\n  \"password\": \"caregiver123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/caregivers/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "caregivers", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patient Management",
+      "item": [
+        {
+          "name": "1. Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"age\": 45,\n  \"sex\": \"Male\",\n  \"abha_id\": \"ABHA123456\",\n  \"past_history\": \"Diabetes, Hypertension\",\n  \"current_medications\": \"Metformin, Lisinopril\",\n  \"reported_symptoms\": \"Chest pain, shortness of breath\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/patients",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients"]
+            }
+          }
+        },
+        {
+          "name": "2. List All Patients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients"]
+            }
+          }
+        },
+        {
+          "name": "3. Get Patient Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medical History",
+      "item": [
+        {
+          "name": "1. Add Medical History",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chronic_conditions\": \"Diabetes, Hypertension, Asthma\",\n  \"allergies\": \"Penicillin, Peanuts\",\n  \"previous_surgeries\": \"Appendectomy (2015)\",\n  \"family_history\": \"Heart disease (Father)\",\n  \"blood_type\": \"O+\",\n  \"height_cm\": 175,\n  \"weight_kg\": 80,\n  \"smoking_status\": \"Former\",\n  \"medications\": \"Metformin 500mg, Lisinopril 10mg\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/medical-history",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "medical-history"]
+            }
+          }
+        },
+        {
+          "name": "2. Get Medical History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/medical-history",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "medical-history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Emergency Contacts",
+      "item": [
+        {
+          "name": "1. Add Emergency Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"relationship\": \"Spouse\",\n  \"phone_primary\": \"9876543211\",\n  \"phone_secondary\": \"9876543212\",\n  \"email\": \"jane@example.com\",\n  \"address\": \"123 Main St\",\n  \"city\": \"Bangalore\",\n  \"state\": \"Karnataka\",\n  \"pin_code\": \"560001\",\n  \"priority\": 1,\n  \"notes\": \"Lives nearby, very responsive\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/emergency-contacts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "emergency-contacts"]
+            }
+          }
+        },
+        {
+          "name": "2. List Emergency Contacts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/emergency-contacts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "emergency-contacts"]
+            }
+          }
+        },
+        {
+          "name": "3. Update Emergency Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"relationship\": \"Spouse\",\n  \"phone_primary\": \"9999999999\",\n  \"phone_secondary\": \"9876543212\",\n  \"priority\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/patients/emergency-contacts/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "emergency-contacts", "1"]
+            }
+          }
+        },
+        {
+          "name": "4. Delete Emergency Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients/emergency-contacts/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "emergency-contacts", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Caregiver Management",
+      "item": [
+        {
+          "name": "1. Invite Caregiver to Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caregiver_email\": \"mother@example.com\",\n  \"relationship\": \"Mother\",\n  \"can_receive_alerts\": true,\n  \"can_view_sensitive_data\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/invite-caregiver",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "invite-caregiver"]
+            }
+          }
+        },
+        {
+          "name": "2. List Patient's Caregivers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/caregivers",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "caregivers"]
+            }
+          }
+        },
+        {
+          "name": "3. Revoke Caregiver Access",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{paramedic_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/patients/1/caregivers/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "patients", "1", "caregivers", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Caregiver Portal",
+      "item": [
+        {
+          "name": "1. Caregiver - View My Patients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{caregiver_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/caregiver/my-patients",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "caregiver", "my-patients"]
+            }
+          }
+        },
+        {
+          "name": "2. Caregiver - View Patient History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{caregiver_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/caregiver/patient/1/history",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "caregiver", "patient", "1", "history"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "paramedic_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "caregiver_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

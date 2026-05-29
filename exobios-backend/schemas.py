@@ -345,3 +345,187 @@ class SelfReportedIntakeResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ========================================
+# PATIENT MANAGEMENT SCHEMAS (NEW)
+# ========================================
+
+# Medical History
+class PatientMedicalHistoryBase(BaseModel):
+    chronic_conditions: Optional[str] = None
+    allergies: Optional[str] = None
+    previous_surgeries: Optional[str] = None
+    family_history: Optional[str] = None
+    medications: Optional[str] = None
+    immunization_status: Optional[str] = None
+    blood_type: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    smoking_status: Optional[str] = None
+    alcohol_consumption: Optional[str] = None
+    notes: Optional[str] = None
+
+class PatientMedicalHistoryCreate(PatientMedicalHistoryBase):
+    patient_id: int
+
+class PatientMedicalHistoryResponse(PatientMedicalHistoryBase):
+    id: int
+    patient_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+# Emergency Contact
+class EmergencyContactBase(BaseModel):
+    name: str
+    relationship: str  # Father, Mother, Spouse, Sibling, Friend, Other
+    phone_primary: str
+    phone_secondary: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pin_code: Optional[str] = None
+    priority: Optional[int] = 1
+    notes: Optional[str] = None
+
+class EmergencyContactCreate(EmergencyContactBase):
+    patient_id: int
+
+class EmergencyContactResponse(EmergencyContactBase):
+    id: int
+    patient_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+# Caregiver
+class CaregiverBase(BaseModel):
+    email: str
+    name: str
+    phone: Optional[str] = None
+    caregiver_type: str  # Family, Professional, Friend, Other
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pin_code: Optional[str] = None
+
+class CaregiverCreate(CaregiverBase):
+    password: str
+
+class CaregiverResponse(CaregiverBase):
+    id: int
+    is_active: int
+    is_verified: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+# Patient Access
+class PatientAccessBase(BaseModel):
+    relationship: str  # Mother, Father, Spouse, Child, Doctor, Nurse, etc.
+    permission_level: Optional[str] = "VIEW"  # VIEW, MANAGE, EDIT_ALERTS
+    can_receive_alerts: Optional[int] = 1
+    can_view_sensitive_data: Optional[int] = 1
+
+class PatientAccessCreate(PatientAccessBase):
+    patient_id: int
+    caregiver_id: int
+
+class PatientAccessResponse(PatientAccessBase):
+    id: int
+    patient_id: int
+    caregiver_id: int
+    is_active: int
+    approved_by: Optional[str]
+    created_at: datetime
+    approved_at: Optional[datetime]
+    revoked_at: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+
+
+# Complete Patient Profile (with all details)
+class PatientDetailedProfile(BaseModel):
+    # Basic Info
+    id: int
+    name: str
+    age: int
+    sex: str
+    abha_id: Optional[str]
+    
+    # Medical History
+    medical_history: Optional[PatientMedicalHistoryResponse] = None
+    
+    # Emergency Contacts
+    emergency_contacts: List[EmergencyContactResponse] = []
+    
+    # Caregivers
+    caregivers: List[dict] = []  # List of caregivers with access
+    
+    # Latest Health Prediction
+    latest_prediction: Optional[HealthPredictionResponse] = None
+    
+    # Latest Sensor Reading
+    latest_sensor_reading: Optional[SensorReadingResponse] = None
+    
+    class Config:
+        from_attributes = True
+
+
+# Caregiver Portal - Patient Overview
+class CaregiverPatientOverview(BaseModel):
+    patient_id: int
+    patient_name: str
+    patient_age: int
+    patient_sex: str
+    relationship_to_patient: str
+    
+    # Current Status
+    current_risk_level: Optional[str] = None
+    latest_reading_timestamp: Optional[datetime] = None
+    latest_vitals: Optional[dict] = None
+    
+    # Medical Summary (if permitted)
+    allergies: Optional[str] = None
+    blood_type: Optional[str] = None
+    chronic_conditions: Optional[str] = None
+    
+    # Permissions
+    can_view_sensitive_data: bool
+    can_receive_alerts: bool
+
+
+# Invite Caregiver Request
+class InviteCaregiverRequest(BaseModel):
+    caregiver_email: str
+    relationship: str
+    can_receive_alerts: Optional[bool] = True
+    can_view_sensitive_data: Optional[bool] = True
+
+class InviteCaregiverResponse(BaseModel):
+    status: str
+    message: str
+    invitation_sent_to: str
+    created_at: datetime
+
+
+# Update Patient Medical Info
+class UpdatePatientMedicalInfo(BaseModel):
+    chronic_conditions: Optional[str] = None
+    allergies: Optional[str] = None
+    current_medications: Optional[str] = None
+    blood_type: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
