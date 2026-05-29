@@ -55,7 +55,7 @@ mail-parser==4.1.4
 MarkupSafe==3.0.3
 msgpack==1.1.2
 nltk==3.9.2
-numpy==2.4.3
+numpy==2.2.3
 opencv-python==4.12.0.88
 packaging==26.2
 pandas==3.0.1
