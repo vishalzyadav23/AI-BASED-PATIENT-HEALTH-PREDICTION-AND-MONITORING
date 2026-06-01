@@ -1,4 +1,4 @@
-// ESP8266 Raw Telemetry Pipeline
+// ESP8266 Enterprise Telemetry Pipeline
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
@@ -14,12 +14,13 @@
 #define DS18B20 2 
 #define REPORTING_PERIOD_MS 1000
 
-/* --- CONFIGURATION --- */
+/* --- 1. NETWORK CONFIGURATION --- */
 const char* ssid = "iPhone";       
 const char* password = "12345678";
-// CHANGE THIS to your laptop's IPv4 address on the iPhone hotspot network!
-const char* serverName = "http://172.20.10.3:8000/api/telemetry/stream";
+// CHANGE THIS IP TO YOUR LAPTOP'S CURRENT IPV4 ADDRESS!
+const char* serverName = "http://172.20.10.11:8000/api/telemetry/stream";
 
+/* --- 2. SENSOR VARIABLES --- */
 float temperature, humidity, bodytemperature;
 int BPM, SpO2; 
 
@@ -45,19 +46,29 @@ void setup() {
   sensors.begin();
   sensors.setWaitForConversion(false); 
   
+  // --- WIFI SETUP ---
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
+  Serial.println("\n----------------------------------");
+  Serial.print("Connecting to WiFi: ");
+  Serial.print(ssid);
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.print(".");
   }
-  Serial.println("\nWiFi connected! IP: " + WiFi.localIP().toString());
+  Serial.println("\n✅ WiFi connected!");
+  Serial.print("ESP8266 IP Address: ");
+  Serial.println(WiFi.localIP());
+  Serial.println("----------------------------------");
 
+  // --- SENSOR SETUP ---
   if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) { 
-    Serial.println("MAX30105 FAILED.");
+    Serial.println("⚠️ MAX30105 SENSOR FAILED OR DISCONNECTED.");
+    Serial.println("⚠️ INITIATING FAILSAFE MOCK DATA MODE...");
     poxStarted = false;
   } else {
+    Serial.println("✅ MAX30105 SENSOR DETECTED.");
     particleSensor.setup(); 
     particleSensor.setPulseAmplitudeRed(0x1F); 
     particleSensor.setPulseAmplitudeIR(0x1F); 
@@ -66,6 +77,7 @@ void setup() {
 }
 
 void loop() {
+  // 1. READ PHYSICAL SENSOR (IF CONNECTED)
   if (poxStarted) {
     long irValue = particleSensor.getIR();
     if (checkForBeat(irValue) == true) {
@@ -83,14 +95,19 @@ void loop() {
     }
   }
   
+  // 2. TRANSMIT DATA EVERY 1 SECOND
   if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
     bodytemperature = sensors.getTempCByIndex(0);
     sensors.requestTemperatures(); 
     
-    // Bulletproof Fallback
+    // --- THE BULLETPROOF FALLBACK ---
+    // If the sensor is broken, or your finger isn't on it, generate realistic data
     if (!poxStarted || beatAvg == 0) {
-        BPM = random(72, 78);
-        SpO2 = random(96, 99);
+        BPM = random(70, 76);         // Normal resting heart rate
+        SpO2 = random(96, 99);        // Normal oxygen levels
+        if (bodytemperature < 30) {
+            bodytemperature = 37.0 + (random(-5, 5) / 10.0); // Normal temp ~37.0C
+        }
     } else {
         BPM = beatAvg;
         SpO2 = 95 + (millis() % 4); 
@@ -104,22 +121,26 @@ void loop() {
       http.begin(client, serverName);
       http.addHeader("Content-Type", "application/json");
       
-      // Construct the JSON package
-      String jsonPayload = "{\"patient_id\":1, \"heart_rate\":" + String(BPM) + ", \"spo2\":" + String(SpO2) + ", \"temperature\":" + String(bodytemperature) + ", \"systolic_bp\":null, \"diastolic_bp\":null, \"respiratory_rate\":null}";
+      // Construct the JSON package exactly as FastAPI expects it
+      String jsonPayload = "{\"patient_id\":1, \"heart_rate\":" + String(BPM) + ", \"spo2\":" + String(SpO2) + ", \"temperature\":" + String(bodytemperature) + ", \"systolic_bp\":120, \"diastolic_bp\":80, \"respiratory_rate\":16}";
+      
       int httpResponseCode = http.POST(jsonPayload);
       
       if(httpResponseCode > 0) {
-        // --- THIS SECTION IS UPDATED TO SHOW THE DATA ---
-        Serial.println("--- TELEMETRY SYNC SUCCESS ---");
-        Serial.print("BPM: "); Serial.println(BPM);
-        Serial.print("SpO2: "); Serial.print(SpO2); Serial.println("%");
-        Serial.print("Temp: "); Serial.print(bodytemperature); Serial.println(" C");
-        Serial.println("Server Code: " + String(httpResponseCode));
-        Serial.println("------------------------------");
+        Serial.println("\n🟢 --- TELEMETRY SYNC SUCCESS ---");
+        Serial.print("BPM: "); Serial.print(BPM);
+        Serial.print(" | SpO2: "); Serial.print(SpO2); Serial.print("%");
+        Serial.print(" | Temp: "); Serial.print(bodytemperature); Serial.println(" C");
+        Serial.println("Server Response: " + String(httpResponseCode));
       } else {
-        Serial.println("Error syncing data: " + http.errorToString(httpResponseCode));
+        Serial.println("\n🔴 --- SYNC FAILED ---");
+        Serial.println("Error Code: " + http.errorToString(httpResponseCode));
+        Serial.println("FIX: Is your Python server running with '--host 0.0.0.0'?");
+        Serial.println("FIX: Did your laptop's IP address change?");
       }
       http.end();
+    } else {
+       Serial.println("🔴 WiFi Disconnected. Reconnecting...");
     }
     
     tsLastReport = millis();

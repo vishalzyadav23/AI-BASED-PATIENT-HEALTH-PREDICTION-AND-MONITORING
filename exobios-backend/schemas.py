@@ -7,9 +7,35 @@ from datetime import datetime
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user_id: Optional[int] = None
 
 class TokenData(BaseModel):
     personnel_id: Optional[str] = None
+
+# --- Patient Account Schemas ---
+class PatientAccountCreate(BaseModel):
+    email: str
+    password: str
+    first_name: str
+    last_name: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    phone: Optional[str] = None
+
+class PatientAccountResponse(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    age: Optional[int]
+    gender: Optional[str]
+    phone: Optional[str]
+    is_active: int
+    is_verified: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 # --- User/Paramedic Schemas ---
 class UserBase(BaseModel):

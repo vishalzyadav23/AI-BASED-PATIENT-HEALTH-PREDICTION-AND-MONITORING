@@ -4,19 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caregiver Dashboard - Exobios</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>HealthSync Pro - Caregiver Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="design-system.css">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        /* Caregiver Dashboard Specific Styles */
         body {
-            background: radial-gradient(circle at 10% 20%, #0f172a 0%, #020617 100%);
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
             background-attachment: fixed;
-            color: #e2e8f0;
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
@@ -277,6 +275,8 @@
             border-left: 4px solid #5eead4;
             border-radius: 6px;
             animation: slideIn 0.3s ease;
+            color: #fff;
+            font-size: 13px;
         }
 
         @keyframes slideIn {
@@ -298,6 +298,26 @@
 
             .sidebar {
                 width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 15px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .brand {
+                padding: 0;
+                margin-bottom: 0;
+            }
+
+            .nav-menu {
+                display: flex;
+            }
+
+            .nav-menu a {
+                padding: 5px 10px;
+                font-size: 10px;
             }
 
             .patients-grid {
@@ -347,7 +367,7 @@
     <div id="toast-container"></div>
 
     <script>
-        const API_BASE = 'https://exobios-backend.onrender.com/api';
+        const API_BASE = 'http://localhost:8000/api';
 
         function showToast(msg, color = '#5eead4') {
             const container = document.getElementById('toast-container');
@@ -371,6 +391,29 @@
         async function loadPatients() {
             try {
                 const token = getCaregiverToken();
+                const email = localStorage.getItem('caregiverEmail') || "demo@exobios.com";
+
+                // 🚀 MANAGER DEMO INTERCEPTOR
+                if (token === 'demo_token_12345') {
+                    const demoPatients = [{
+                        patient_id: 1,
+                        patient_name: "Rajesh Kumar",
+                        patient_age: 45,
+                        patient_sex: "Male",
+                        current_risk_level: "HIGH",
+                        relationship_to_patient: "Spouse",
+                        latest_vitals: { heart_rate: 110, spo2: 92, temperature: 38.5 },
+                        allergies: "Penicillin"
+                    }];
+
+                    document.getElementById('user-email').textContent = email;
+                    displayPatients(demoPatients);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                    return;
+                }
+
+                // Standard API Request
                 const response = await fetch(`${API_BASE}/caregiver/my-patients`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -378,10 +421,7 @@
                 if (!response.ok) throw new Error('Failed to load patients');
 
                 const patients = await response.json();
-
-                const email = localStorage.getItem('caregiverEmail');
                 document.getElementById('user-email').textContent = email;
-
                 displayPatients(patients);
 
                 document.getElementById('loading').style.display = 'none';
@@ -404,7 +444,7 @@
 
             container.innerHTML = patients.map(p => {
                 const riskClass = p.current_risk_level === 'CRITICAL' ? 'risk-critical' :
-                    p.current_risk_level === 'ALERT' ? 'risk-warning' : 'risk-stable';
+                    p.current_risk_level === 'HIGH' ? 'risk-warning' : 'risk-stable';
                 return `
                     <div class="patient-card">
                         <div class="patient-card-header">

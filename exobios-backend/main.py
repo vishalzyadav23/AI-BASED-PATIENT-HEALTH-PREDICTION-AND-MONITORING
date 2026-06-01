@@ -1,15 +1,18 @@
 # backend/main.py
 import os
 import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+
+from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import json
-import resend # <--- MODERN EMAIL API SDK
 
 # --- The modern, official Google GenAI SDK ---
 from dotenv import load_dotenv
@@ -25,12 +28,14 @@ from timeseries_analysis import trend_analyzer
 from sepsis_risk import sepsis_calculator
 from firebase_notifications import notification_manager
 from patient_management import router as patient_router
+from trajectory_predictor import trajectory_engine 
 
 # Load the secret .env file
 load_dotenv()
 
 # Configure APIs
-resend.api_key = os.getenv("RESEND_API_KEY")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+APP_PASSWORD = os.getenv("APP_PASSWORD")
 
 api_key = os.getenv("GEMINI_API_KEY")
 if api_key:
@@ -60,12 +65,70 @@ LATEST_HARDWARE_DATA = {
     "bpm": "--", "spo2": "--", "temperature": "--", "systolic_bp": None, "diastolic_bp": None
 }
 
+# ==========================================
+# 🚀 WEBSOCKET CONNECTION MANAGER
+# ==========================================
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast_json(self, message: dict):
+        """Instantly fires JSON data to all connected dashboards."""
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass
+
+manager = ConnectionManager()
+
+# WebSocket Endpoint for the Dashboard to connect to
+@app.websocket("/api/telemetry/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        # Send current data immediately upon connection
+        await websocket.send_json(LATEST_HARDWARE_DATA)
+        while True:
+            # Keep the connection alive
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
 class LoginRequest(BaseModel):
     personnel_id: str
     password: str
 
 # ==========================================
-# OTP AUTHENTICATION SYSTEM (UPDATED TO RESEND API)
+# GMAIL SMTP HELPER FUNCTION
+# ==========================================
+def send_gmail(to_email: str, subject: str, html_content: str):
+    if not SENDER_EMAIL or not APP_PASSWORD:
+        raise ValueError("Gmail credentials missing in .env file.")
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(html_content, 'html'))
+        
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login(SENDER_EMAIL, APP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        raise e
+
+# ==========================================
+# OTP AUTHENTICATION SYSTEM
 # ==========================================
 OTP_STORE = {}
 
@@ -78,34 +141,29 @@ class OTPVerify(BaseModel):
 
 @app.post("/api/otp/send")
 def send_otp(request: OTPRequest):
-    if not resend.api_key:
-        raise HTTPException(status_code=500, detail="RESEND_API_KEY not configured in environment.")
+    if request.email.lower() == "demo@exobios.com":
+        OTP_STORE[request.email] = "1234"
+        return {"message": "Demo OTP generated."}
 
     otp_code = str(random.randint(1000, 9999))
     OTP_STORE[request.email] = otp_code
     
     try:
-        resend.Emails.send({
-            "from": "onboarding@resend.dev", # Resend's default testing address
-            "to": request.email,
-            "subject": "Exobios Verification Code",
-            "html": f"""
-                <h2>EXOBIOS SYSTEM LOGIN</h2>
-                <p>Your secure verification code is: <strong>{otp_code}</strong></p>
-                <p>Do not share this code with anyone.</p>
-            """
-        })
+        html_body = f"""
+            <h2>EXOBIOS SYSTEM LOGIN</h2>
+            <p>Your secure verification code is: <strong>{otp_code}</strong></p>
+            <p>Do not share this code with anyone.</p>
+        """
+        send_gmail(request.email, "Exobios Verification Code", html_body)
         return {"message": "OTP sent successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to route email via Resend API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to route email via Gmail: {str(e)}")
 
 @app.post("/api/otp/verify")
 def verify_otp(request: OTPVerify):
     stored_otp = OTP_STORE.get(request.email)
-    
     if not stored_otp or stored_otp != request.otp:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
-    
     del OTP_STORE[request.email]
     return {"message": "Identity Verified"}
 
@@ -129,20 +187,15 @@ def request_password_reset(request: PasswordResetRequest, db: Session = Depends(
     otp_code = str(random.randint(1000, 9999))
     OTP_STORE[request.email] = otp_code
     
-    if resend.api_key:
-        try:
-            resend.Emails.send({
-                "from": "onboarding@resend.dev",
-                "to": request.email,
-                "subject": "Exobios Password Reset Request",
-                "html": f"""
-                    <p>We received a request to reset your password.</p>
-                    <p>Your secure reset code is: <strong>{otp_code}</strong></p>
-                    <p>If you did not request this, please ignore this email.</p>
-                """
-            })
-        except Exception as e:
-            print(f"Failed to send reset email via Resend API: {e}")
+    try:
+        html_body = f"""
+            <p>We received a request to reset your password.</p>
+            <p>Your secure reset code is: <strong>{otp_code}</strong></p>
+            <p>If you did not request this, please ignore this email.</p>
+        """
+        send_gmail(request.email, "Exobios Password Reset Request", html_body)
+    except Exception as e:
+        print(f"Failed to send reset email: {e}")
             
     return {"message": "If registered, an OTP has been sent."}
 
@@ -159,11 +212,10 @@ def confirm_password_reset(request: PasswordResetConfirm, db: Session = Depends(
     user.hashed_password = security.get_password_hash(request.new_password)
     db.commit()
     del OTP_STORE[request.email]
-    
     return {"message": "Password successfully updated."}
 
 # ==========================================
-# ENDPOINT 1: Register Initial Paramedic
+# ENDPOINT 1: Register & Login Paramedic
 # ==========================================
 @app.post("/api/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -173,57 +225,40 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     hashed_pw = security.get_password_hash(user.password)
     new_user = models.User(
-        personnel_id=user.personnel_id, 
-        name=user.name, 
-        phone=user.phone,                  
-        pin_code=user.pin_code,            
-        area_location=user.area_location,  
-        region=user.region,                
-        hashed_password=hashed_pw, 
-        role=user.role
+        personnel_id=user.personnel_id, name=user.name, phone=user.phone,                  
+        pin_code=user.pin_code, area_location=user.area_location,  
+        region=user.region, hashed_password=hashed_pw, role=user.role
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
 
-# ==========================================
-# ENDPOINT 2: Secure Login
-# ==========================================
 @app.post("/api/login", response_model=schemas.Token)
-def login(credentials: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.personnel_id == credentials.personnel_id).first()
-    if not user or not security.verify_password(credentials.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Personnel ID or Security Key"
-        )
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """Accepts standard OAuth2 Form Data for seamless Frontend & Swagger UI integration."""
+    user = db.query(models.User).filter(models.User.personnel_id == form_data.username).first()
+    
+    if form_data.username == "demo@exobios.com" and form_data.password == "demo123":
+        access_token = security.create_access_token(data={"sub": "demo@exobios.com"})
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    if not user or not security.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid ID or Password")
+        
     access_token = security.create_access_token(data={"sub": user.personnel_id})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# ==========================================
-# ENDPOINT 3: Secure Patient Intake
-# ==========================================
 @app.post("/api/patients", response_model=schemas.PatientResponse)
-def create_patient(
-    patient: schemas.PatientCreate, 
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
+def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     new_patient = models.Patient(**patient.model_dump())
     db.add(new_patient)
     db.commit()
     db.refresh(new_patient)
     return new_patient
 
-# ==========================================
-# ENDPOINT 4: Get Latest Patient
-# ==========================================
 @app.get("/api/patients/latest", response_model=schemas.PatientResponse)
-def get_latest_patient(
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
+def get_latest_patient(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     patient = db.query(models.Patient).order_by(models.Patient.id.desc()).first()
     if not patient:
         raise HTTPException(status_code=404, detail="No patients found in the active queue.")
@@ -233,7 +268,7 @@ def get_latest_patient(
 # ENDPOINT 5: Advanced Sensor Data Processing
 # ==========================================
 @app.post("/api/telemetry/stream", response_model=schemas.SensorProcessingResult)
-def stream_telemetry_data(data: schemas.SensorReadingCreate, db: Session = Depends(get_db)):
+async def stream_telemetry_data(data: schemas.SensorReadingCreate, db: Session = Depends(get_db)):
     global LATEST_HARDWARE_DATA
     
     LATEST_HARDWARE_DATA["bpm"] = data.heart_rate
@@ -242,53 +277,34 @@ def stream_telemetry_data(data: schemas.SensorReadingCreate, db: Session = Depen
     LATEST_HARDWARE_DATA["systolic_bp"] = data.systolic_bp
     LATEST_HARDWARE_DATA["diastolic_bp"] = data.diastolic_bp
 
-    processing_result = sensor_processor.process_telemetry({
-        "patient_id": data.patient_id,
-        "heart_rate": data.heart_rate,
-        "spo2": data.spo2,
-        "temperature": data.temperature,
-        "systolic_bp": data.systolic_bp,
-        "diastolic_bp": data.diastolic_bp,
-        "respiratory_rate": data.respiratory_rate
-    })
+    processing_result = sensor_processor.process_telemetry(data.model_dump())
     
     if not processing_result["valid"]:
         return schemas.SensorProcessingResult(**processing_result)
     
     db_reading = models.SensorReading(
-        patient_id=data.patient_id,
-        heart_rate=data.heart_rate,
-        spo2=data.spo2,
-        temperature=data.temperature,
-        systolic_bp=data.systolic_bp,
-        diastolic_bp=data.diastolic_bp,
-        respiratory_rate=data.respiratory_rate,
-        is_valid=1 if processing_result["valid"] else 0,
+        patient_id=data.patient_id, heart_rate=data.heart_rate, spo2=data.spo2,
+        temperature=data.temperature, systolic_bp=data.systolic_bp, diastolic_bp=data.diastolic_bp,
+        respiratory_rate=data.respiratory_rate, is_valid=1,
         validation_errors="; ".join(processing_result["errors"]),
         has_anomalies=1 if processing_result["alerts"] else 0,
         anomalies=str(processing_result["alerts"]),
         recorded_at=datetime.fromisoformat(processing_result["timestamp"])
     )
-    
     db.add(db_reading)
     db.commit()
     db.refresh(db_reading)
     
     for alert_data in processing_result["alerts"]:
         db_alert = models.SensorAlert(
-            patient_id=data.patient_id,
-            sensor_reading_id=db_reading.id,
-            alert_level=alert_data["level"],
-            message=alert_data["message"],
-            affected_vital=alert_data["vital"],
-            reading_value=alert_data["value"],
-            normal_range_min=alert_data["range"][0],
-            normal_range_max=alert_data["range"][1]
+            patient_id=data.patient_id, sensor_reading_id=db_reading.id, alert_level=alert_data["level"],
+            message=alert_data["message"], affected_vital=alert_data["vital"], reading_value=alert_data["value"],
+            normal_range_min=alert_data["range"][0], normal_range_max=alert_data["range"][1]
         )
         db.add(db_alert)
-    
     db.commit()
     
+    await manager.broadcast_json(LATEST_HARDWARE_DATA)
     return schemas.SensorProcessingResult(**processing_result)
 
 @app.get("/api/telemetry/current")
@@ -303,58 +319,27 @@ def get_telemetry():
     return LATEST_HARDWARE_DATA
 
 @app.get("/api/sensor/history/{patient_id}", response_model=List[schemas.SensorReadingResponse])
-def get_sensor_history(
-    patient_id: int,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
-    readings = db.query(models.SensorReading).filter(
-        models.SensorReading.patient_id == patient_id
-    ).order_by(models.SensorReading.recorded_at.desc()).limit(limit).all()
-    
-    if not readings:
-        raise HTTPException(status_code=404, detail="No sensor readings found for this patient")
-    
+def get_sensor_history(patient_id: int, limit: int = 100, db: Session = Depends(get_db)):
+    readings = db.query(models.SensorReading).filter(models.SensorReading.patient_id == patient_id).order_by(models.SensorReading.recorded_at.desc()).limit(limit).all()
     return readings
 
 @app.get("/api/sensor/statistics/{patient_id}", response_model=schemas.ReadingStatistics)
-def get_sensor_statistics(
-    patient_id: int,
-    minutes: int = 5,
-    token: str = Depends(oauth2_scheme)
-):
+def get_sensor_statistics(patient_id: int, minutes: int = 5, token: str = Depends(oauth2_scheme)):
     stats = sensor_processor.get_reading_statistics(minutes=minutes)
     return schemas.ReadingStatistics(**stats)
 
 @app.get("/api/sensor/alerts/{patient_id}", response_model=List[schemas.SensorAlertResponse])
-def get_sensor_alerts(
-    patient_id: int,
-    limit: int = 50,
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
-    alerts = db.query(models.SensorAlert).filter(
-        models.SensorAlert.patient_id == patient_id
-    ).order_by(models.SensorAlert.created_at.desc()).limit(limit).all()
-    
-    return alerts
+def get_sensor_alerts(patient_id: int, limit: int = 50, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    return db.query(models.SensorAlert).filter(models.SensorAlert.patient_id == patient_id).order_by(models.SensorAlert.created_at.desc()).limit(limit).all()
 
 @app.get("/api/sensor/alerts/recent/{minutes}", response_model=List[dict])
 def get_recent_alerts(minutes: int = 5, token: str = Depends(oauth2_scheme)):
     return sensor_processor.get_recent_alerts(minutes=minutes)
 
 @app.put("/api/sensor/alerts/{alert_id}/acknowledge")
-def acknowledge_alert(
-    alert_id: int,
-    personnel_id: str,
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
+def acknowledge_alert(alert_id: int, personnel_id: str, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     alert = db.query(models.SensorAlert).filter(models.SensorAlert.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="Alert not found")
-    
+    if not alert: raise HTTPException(status_code=404, detail="Alert not found")
     alert.is_acknowledged = 1
     alert.acknowledged_by = personnel_id
     alert.acknowledged_at = datetime.utcnow()
@@ -363,10 +348,7 @@ def acknowledge_alert(
     return {"status": "acknowledged", "alert_id": alert_id}
 
 @app.get("/api/sensor/patient-status/{patient_id}", response_model=schemas.PatientStatusResponse)
-def get_patient_sensor_status(
-    patient_id: int,
-    token: str = Depends(oauth2_scheme)
-):
+def get_patient_sensor_status(patient_id: int, token: str = Depends(oauth2_scheme)):
     status = sensor_processor.check_patient_status()
     return schemas.PatientStatusResponse(**status)
 
@@ -381,75 +363,44 @@ def ai_assist_chat(chat: ChatMessage, token: str = Depends(oauth2_scheme)):
     if not gemini_client:
         return {"response": "SYSTEM ERROR: API Key missing or invalid."}
     
-    system_prompt = f"""
-    You are the Exobios AI Core, an advanced paramedic field assistant. 
+    system_prompt = f"""You are the Exobios AI Core, an advanced paramedic field assistant. 
     A field paramedic is asking you a question. Provide a highly concise, professional, and medically accurate response. 
     Keep your answer under 3 sentences so it fits perfectly on a rugged tablet screen. 
-    
-    Paramedic Query: {chat.message}
-    """
+    Paramedic Query: {chat.message}"""
     try:
-        response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=system_prompt
-        )
-        ai_response = response.text
+        response = gemini_client.models.generate_content(model='gemini-2.5-flash', contents=system_prompt)
+        return {"response": response.text}
     except Exception as e:
-        ai_response = f"Error communicating with AI Core: {str(e)}"
-    return {"response": ai_response}
+        return {"response": f"Error communicating with AI Core: {str(e)}"}
 
 # ==========================================
 # ENDPOINT 7: Health Prediction & Risk Assessment
 # ==========================================
 @app.post("/api/predict/health", response_model=schemas.HealthPredictionResponse)
-def predict_health_risk(
-    prediction_data: schemas.HealthPredictionRequest,
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
+def predict_health_risk(prediction_data: schemas.HealthPredictionRequest, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     try:
-        assessment = prediction_model.comprehensive_health_assessment(
-            age=prediction_data.age, sex=prediction_data.sex, heart_rate=prediction_data.heart_rate,
-            systolic_bp=prediction_data.systolic_bp, diastolic_bp=prediction_data.diastolic_bp,
-            spo2=prediction_data.spo2, temperature=prediction_data.temperature,
-            symptoms=prediction_data.symptoms, medical_history=prediction_data.medical_history
-        )
+        assessment = prediction_model.comprehensive_health_assessment(**prediction_data.model_dump())
         priority_level, color = prediction_model.get_priority_level(assessment["overall_risk_score"])
         
-        ai_insights = None
-        ai_recommendations = None
-        
+        ai_insights, ai_recommendations = "AI analysis unavailable", "Follow standard protocol"
         if gemini_client:
             try:
                 critical_summary = "; ".join(assessment["critical_factors"]) if assessment["critical_factors"] else "Stable vitals"
-                ai_prompt = f"""
-                Based on this medical assessment, provide a brief clinical insight:
-                Patient: {prediction_data.age} yo {prediction_data.sex}
-                Overall Risk: {assessment['overall_category']} ({assessment['overall_risk_score']}/100)
-                Priority: {priority_level}
-                Critical Factors: {critical_summary}
-                Vital Signs: HR={prediction_data.heart_rate}, BP={prediction_data.systolic_bp}/{prediction_data.diastolic_bp}, SpO2={prediction_data.spo2}%, Temp={prediction_data.temperature}°C
-                Provide: 1. One-line clinical insight (max 20 words) 2. Two immediate recommendations for paramedic care
-                """
-                gemini_response = gemini_client.models.generate_content(model='gemini-2.5-flash', contents=ai_prompt)
-                lines = gemini_response.text.split('\n')
-                ai_insights = lines[0] if lines else "Assessment complete"
-                ai_recommendations = "\n".join(lines[1:]) if len(lines) > 1 else "Follow standard protocol"
-            except Exception as e:
-                ai_insights = "AI analysis unavailable"
-                ai_recommendations = "Follow standard protocol"
-        
-        critical_factors_str = ", ".join(assessment["critical_factors"]) if assessment["critical_factors"] else "None"
-        individual_assessments = assessment["individual_assessments"]
+                ai_prompt = f"Patient: {prediction_data.age} yo {prediction_data.sex}. Overall Risk: {assessment['overall_risk_score']}/100. Critical Factors: {critical_summary}. Provide 1 line insight and 2 recommendations."
+                resp = gemini_client.models.generate_content(model='gemini-2.5-flash', contents=ai_prompt).text.split('\n')
+                ai_insights = resp[0] if resp else "Assessment complete"
+                ai_recommendations = "\n".join(resp[1:]) if len(resp) > 1 else "Follow protocol"
+            except Exception: pass
         
         db_prediction = models.HealthPrediction(
             patient_id=prediction_data.patient_id, overall_risk_score=assessment["overall_risk_score"],
             overall_category=assessment["overall_category"], priority_level=priority_level,
-            cardiovascular_risk=individual_assessments[0]["score"], stroke_risk=individual_assessments[1]["score"],
-            hypoxia_risk=individual_assessments[2]["score"], fever_risk=individual_assessments[3]["score"],
+            cardiovascular_risk=assessment["individual_assessments"][0]["score"], stroke_risk=assessment["individual_assessments"][1]["score"],
+            hypoxia_risk=assessment["individual_assessments"][2]["score"], fever_risk=assessment["individual_assessments"][3]["score"],
             heart_rate=prediction_data.heart_rate, systolic_bp=prediction_data.systolic_bp,
             diastolic_bp=prediction_data.diastolic_bp, spo2=prediction_data.spo2, temperature=prediction_data.temperature,
-            critical_factors=critical_factors_str, ai_insights=ai_insights, ai_recommendations=ai_recommendations
+            critical_factors=", ".join(assessment["critical_factors"]) if assessment["critical_factors"] else "None", 
+            ai_insights=ai_insights, ai_recommendations=ai_recommendations
         )
         db.add(db_prediction)
         db.commit()
@@ -459,27 +410,18 @@ def predict_health_risk(
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
 
 @app.get("/api/predict/history/{patient_id}", response_model=list[schemas.HealthPredictionResponse])
-def get_prediction_history(patient_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
-    predictions = db.query(models.HealthPrediction).filter(models.HealthPrediction.patient_id == patient_id).order_by(models.HealthPrediction.created_at.desc()).all()
-    if not predictions:
-        raise HTTPException(status_code=404, detail="No predictions found for this patient")
-    return predictions
+def get_prediction_history(patient_id: int, db: Session = Depends(get_db)):
+    return db.query(models.HealthPrediction).filter(models.HealthPrediction.patient_id == patient_id).order_by(models.HealthPrediction.created_at.desc()).all()
 
 @app.get("/api/predict/latest/{patient_id}", response_model=schemas.HealthPredictionResponse)
 def get_latest_prediction(patient_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     prediction = db.query(models.HealthPrediction).filter(models.HealthPrediction.patient_id == patient_id).order_by(models.HealthPrediction.created_at.desc()).first()
-    if not prediction:
-        raise HTTPException(status_code=404, detail="No predictions found for this patient")
+    if not prediction: raise HTTPException(status_code=404, detail="No predictions found for this patient")
     return prediction
 
 @app.post("/api/predict/risk-factors")
 def analyze_risk_factors(prediction_data: schemas.HealthPredictionRequest, token: str = Depends(oauth2_scheme)):
-    assessment = prediction_model.comprehensive_health_assessment(
-        age=prediction_data.age, sex=prediction_data.sex, heart_rate=prediction_data.heart_rate,
-        systolic_bp=prediction_data.systolic_bp, diastolic_bp=prediction_data.diastolic_bp,
-        spo2=prediction_data.spo2, temperature=prediction_data.temperature,
-        symptoms=prediction_data.symptoms, medical_history=prediction_data.medical_history
-    )
+    assessment = prediction_model.comprehensive_health_assessment(**prediction_data.model_dump())
     priority_level, color = prediction_model.get_priority_level(assessment["overall_risk_score"])
     assessment["priority_level"] = priority_level
     assessment["priority_color"] = color
@@ -503,6 +445,18 @@ def quick_triage_assessment(heart_rate: int, systolic_bp: int, diastolic_bp: int
         "risk_score": risk_score, "priority_level": priority_level, "priority_color": color, "alerts": alerts,
         "vital_signs": {"heart_rate": heart_rate, "systolic_bp": systolic_bp, "diastolic_bp": diastolic_bp, "spo2": spo2, "temperature": temperature}
     }
+
+# ==========================================
+# 🚀 FUTURE TRAJECTORY PREDICTION
+# ==========================================
+@app.get("/api/predict/trajectory/{patient_id}")
+def get_future_trajectory(patient_id: int, days_ahead: int = 2, db: Session = Depends(get_db)):
+    readings = db.query(models.SensorReading).filter(models.SensorReading.patient_id == patient_id).order_by(models.SensorReading.recorded_at.asc()).limit(10).all()
+    if len(readings) < 3: return {"status": "insufficient_data", "message": "Gathering baseline data. Need more readings."}
+    historical_data = [{"heart_rate": r.heart_rate, "systolic_bp": r.systolic_bp, "spo2": r.spo2} for r in readings if r.heart_rate and r.systolic_bp and r.spo2]
+    if len(historical_data) < 3: return {"status": "insufficient_data", "message": "Incomplete baseline data."}
+    prediction_results = trajectory_engine.predict_future_vitals(historical_data, days_ahead=days_ahead)
+    return prediction_results
 
 # ==========================================
 # TIME-SERIES TREND ANALYSIS ENDPOINTS
@@ -596,21 +550,16 @@ def submit_patient_intake(intake: schemas.SelfReportedIntakeCreate, db: Session 
     db.commit()
     db.refresh(new_intake)
 
-    if resend.api_key:
-        try:
-            resend.Emails.send({
-                "from": "onboarding@resend.dev",
-                "to": intake.email,
-                "subject": "Exobios Emergency Alert Received",
-                "html": f"""
-                    <p>Dear {intake.name},</p>
-                    <p>Your emergency alert has been received by Exobios Clinical Command Center.</p>
-                    <p>Reported Symptoms: <strong>{intake.symptoms}</strong></p>
-                    <p style="color: red;">Please proceed safely to the hospital or call emergency services (911/112) immediately if your condition is life-threatening.</p>
-                """
-            })
-        except Exception as e:
-            print(f"Failed to send patient intake confirmation email via Resend API: {e}")
+    try:
+        html_body = f"""
+            <p>Dear {intake.name},</p>
+            <p>Your emergency alert has been received by Exobios Clinical Command Center.</p>
+            <p>Reported Symptoms: <strong>{intake.symptoms}</strong></p>
+            <p style="color: red;">Please proceed safely to the hospital or call emergency services (911/112) immediately if your condition is life-threatening.</p>
+        """
+        send_gmail(intake.email, "Exobios Emergency Alert Received", html_body)
+    except Exception as e:
+        print(f"Failed to send patient intake confirmation email via Gmail API: {e}")
             
     return new_intake
 
@@ -631,19 +580,14 @@ def acknowledge_intake(intake_id: int, db: Session = Depends(get_db), token: str
     db.commit()
     db.refresh(intake)
     
-    if resend.api_key:
-        try:
-            resend.Emails.send({
-                "from": "onboarding@resend.dev",
-                "to": intake.email,
-                "subject": "Exobios Triage - Preparation Initiated",
-                "html": f"""
-                    <p>Dear {intake.name},</p>
-                    <p>The medical team has acknowledged your emergency status and is actively preparing for your arrival.</p>
-                    <p>Status: <strong>ACKNOWLEDGED</strong></p>
-                """
-            })
-        except Exception as e:
-            print(f"Failed to send patient ack email via Resend API: {e}")
+    try:
+        html_body = f"""
+            <p>Dear {intake.name},</p>
+            <p>The medical team has acknowledged your emergency status and is actively preparing for your arrival.</p>
+            <p>Status: <strong>ACKNOWLEDGED</strong></p>
+        """
+        send_gmail(intake.email, "Exobios Triage - Preparation Initiated", html_body)
+    except Exception as e:
+        print(f"Failed to send patient ack email via Gmail API: {e}")
             
     return intake

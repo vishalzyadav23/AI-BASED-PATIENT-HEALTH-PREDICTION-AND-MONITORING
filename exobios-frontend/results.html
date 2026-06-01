@@ -4,8 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI BASED PATIENT HEALTH PREDICTION AND MONITORING</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>HealthSync Pro - Health Results & Predictions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="design-system.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -625,12 +628,58 @@
                     </div>
 
                     <div class="result-card animate-entry delay-2"
+                        style="background: linear-gradient(145deg, rgba(15,23,42,0.6) 0%, rgba(30,41,59,0.4) 100%);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; margin-bottom: 15px;">
+                            <h3 class="card-title" style="margin: 0; color: #a78bfa;">🧠 AI 48-HOUR PREDICTIVE FORECAST
+                            </h3>
+                            <button id="btn-run-prediction"
+                                style="background: rgba(167, 139, 250, 0.2); border: 1px solid #8b5cf6; color: #ddd6fe; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold;">RUN
+                                ANALYSIS</button>
+                        </div>
+
+                        <div id="prediction-results" style="display: none;">
+                            <div
+                                style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center; margin-bottom: 15px;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
+                                    <div style="color: #94a3b8; font-size: 11px; text-transform: uppercase;">Projected
+                                        HR</div>
+                                    <div id="proj-hr"
+                                        style="font-size: 24px; font-weight: bold; color: #ef4444; margin-top: 5px;">--
+                                    </div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
+                                    <div style="color: #94a3b8; font-size: 11px; text-transform: uppercase;">Projected
+                                        BP</div>
+                                    <div id="proj-bp"
+                                        style="font-size: 24px; font-weight: bold; color: #f59e0b; margin-top: 5px;">--
+                                    </div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
+                                    <div style="color: #94a3b8; font-size: 11px; text-transform: uppercase;">Projected
+                                        SpO2</div>
+                                    <div id="proj-spo2"
+                                        style="font-size: 24px; font-weight: bold; color: #38bdf8; margin-top: 5px;">--
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="prediction-alerts"
+                                style="background: rgba(220, 38, 38, 0.1); border-left: 4px solid #ef4444; padding: 10px 15px; font-size: 13px; color: #fca5a5;">
+                            </div>
+                        </div>
+                        <div id="prediction-loading"
+                            style="text-align: center; color: #64748b; font-size: 13px; padding: 20px 0;">
+                            Awaiting manual trigger to analyze historical trajectory...
+                        </div>
+                    </div>
+
+                    <div class="result-card animate-entry delay-3"
                         style="background: rgba(220, 38, 38, 0.1); border-color: rgba(239, 68, 68, 0.3); padding: 15px 25px;">
                         <strong style="color: #ef4444;">⚠️ CRITICAL ALERT:</strong> <span
                             style="color: #fca5a5;">Suspected Acute Anterior STEMI based on 12-Lead ECG findings.</span>
                     </div>
 
-                    <div class="result-card animate-entry delay-3">
+                    <div class="result-card animate-entry delay-4">
                         <h3 class="card-title">IMMEDIATE AID PROTOCOL</h3>
                         <ul style="color: #cbd5e1; list-style: none; padding: 0; margin: 0;">
                             <li style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -644,7 +693,7 @@
                         </ul>
                     </div>
 
-                    <div class="result-card animate-entry delay-4">
+                    <div class="result-card animate-entry delay-5">
                         <h3 class="card-title">ROUTING & TELE-CONSULTATION</h3>
                         <div style="display: flex; flex-direction: column; gap: 10px; color: #cbd5e1; font-size: 14px;">
                             <div
@@ -694,10 +743,7 @@
     </div>
 
     <script>
-        // =========================================================================
-        // 🚀 LIVE PRODUCTION API LINK
-        // =========================================================================
-        const API_BASE = "https://exobios-api.onrender.com/api";
+        const API_BASE = 'http://localhost:8000/api';
 
         document.addEventListener('DOMContentLoaded', async () => {
 
@@ -730,7 +776,6 @@
 
             let currentPatientName = "UNKNOWN";
             try {
-                // UPDATE 1: Fetching latest patient using Live API
                 const response = await fetch(`${API_BASE}/patients/latest`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -812,38 +857,59 @@
 
             document.getElementById('btn-simulate-crash').addEventListener('click', activateEmergencyMode);
 
-            async function fetchLiveTelemetry() {
-                try {
-                    // UPDATE 2: Fetching live telemetry using Live API
-                    const response = await fetch(`${API_BASE}/telemetry`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        document.getElementById('live-bpm').textContent = data.bpm !== "--" ? data.bpm : "--";
-                        document.getElementById('live-spo2').textContent = data.spo2 !== "--" ? data.spo2 : "--";
+            // ==========================================
+            // 🚀 NEW: WEBSOCKET TELEMETRY STREAM
+            // ==========================================
+            function connectWebSocket() {
+                // Safely extract the domain/port from API_BASE and swap http for ws
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsHost = API_BASE.replace(/^https?:\/\//i, '');
+                const wsUrl = `${wsProtocol}//${wsHost}/telemetry/ws`;
 
-                        if (data.bpm !== "--" && data.spo2 !== "--") {
-                            if (!isChartConnected) {
-                                document.getElementById('chart-loader').style.opacity = '0';
-                                setTimeout(() => document.getElementById('chart-loader').style.display = 'none', 500);
-                                showToast("Telemetry sync complete. Data streaming.", "success");
-                                isChartConnected = true;
-                            }
+                const ws = new WebSocket(wsUrl);
 
-                            if (parseInt(data.bpm) > 120 || parseInt(data.spo2) < 90) activateEmergencyMode();
+                ws.onopen = function () {
+                    console.log("WebSocket Connection Established!");
+                };
 
-                            vitalsChart.data.datasets[0].data.shift();
-                            vitalsChart.data.datasets[1].data.shift();
-                            vitalsChart.data.datasets[0].data.push(data.bpm);
-                            vitalsChart.data.datasets[1].data.push(data.spo2);
-                            vitalsChart.update();
+                ws.onmessage = function (event) {
+                    const data = JSON.parse(event.data);
+
+                    document.getElementById('live-bpm').textContent = data.bpm !== "--" ? data.bpm : "--";
+                    document.getElementById('live-spo2').textContent = data.spo2 !== "--" ? data.spo2 : "--";
+
+                    if (data.bpm !== "--" && data.spo2 !== "--") {
+                        if (!isChartConnected) {
+                            document.getElementById('chart-loader').style.opacity = '0';
+                            setTimeout(() => document.getElementById('chart-loader').style.display = 'none', 500);
+                            showToast("Live WebSocket Sync Complete. Data streaming.", "success");
+                            isChartConnected = true;
                         }
+
+                        if (parseInt(data.bpm) > 120 || parseInt(data.spo2) < 90) activateEmergencyMode();
+
+                        // Instantly update Chart.js with zero latency
+                        vitalsChart.data.datasets[0].data.shift();
+                        vitalsChart.data.datasets[1].data.shift();
+                        vitalsChart.data.datasets[0].data.push(data.bpm);
+                        vitalsChart.data.datasets[1].data.push(data.spo2);
+                        vitalsChart.update();
                     }
-                } catch (error) {
-                    console.log("Waiting for hardware...");
-                }
+                };
+
+                ws.onerror = function (error) {
+                    console.error("WebSocket Error:", error);
+                };
+
+                ws.onclose = function () {
+                    console.log("WebSocket Disconnected. Attempting to reconnect in 3 seconds...");
+                    isChartConnected = false;
+                    setTimeout(connectWebSocket, 3000); // Auto-reconnect
+                };
             }
 
-            setInterval(fetchLiveTelemetry, 1000);
+            // Start the WebSocket!
+            connectWebSocket();
 
             document.getElementById('btn-download-pdf').addEventListener('click', () => {
                 const element = document.getElementById('printable-report');
@@ -912,7 +978,7 @@
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
                 try {
-                    // UPDATE 3: Fetching AI Chat response using Live API
+                    // Fetching AI Chat response using Live API
                     const response = await fetch(`${API_BASE}/chat`, {
                         method: 'POST',
                         headers: {
@@ -939,6 +1005,65 @@
             sendBtn.addEventListener('click', sendMessage);
             chatInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendMessage();
+            });
+
+            // ==========================================
+            // 🚀 NEW: FETCH PREDICTIVE FORECAST
+            // ==========================================
+            document.getElementById('btn-run-prediction').addEventListener('click', async () => {
+                const btn = document.getElementById('btn-run-prediction');
+                const loadingDiv = document.getElementById('prediction-loading');
+                const resultsDiv = document.getElementById('prediction-results');
+
+                btn.textContent = "ANALYZING...";
+                loadingDiv.textContent = "Extracting 100-day baseline and calculating trajectory slopes...";
+                loadingDiv.style.display = "block";
+                resultsDiv.style.display = "none";
+
+                try {
+                    // Assuming patient ID 1 for the demo
+                    const response = await fetch(`${API_BASE}/predict/trajectory/1?days_ahead=2`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    const data = await response.json();
+
+                    setTimeout(() => {
+                        loadingDiv.style.display = "none";
+                        btn.textContent = "UPDATE FORECAST";
+
+                        if (data.status === "insufficient_data") {
+                            loadingDiv.textContent = "Insufficient historical data. Need at least 3 days of baseline readings to project trajectory.";
+                            loadingDiv.style.display = "block";
+                        } else {
+                            resultsDiv.style.display = "block";
+
+                            // Update the numbers
+                            document.getElementById('proj-hr').textContent = data.predicted_vitals.heart_rate;
+                            document.getElementById('proj-bp').textContent = data.predicted_vitals.systolic_bp;
+                            document.getElementById('proj-spo2').textContent = data.predicted_vitals.spo2 + "%";
+
+                            // Update the alerts
+                            const alertBox = document.getElementById('prediction-alerts');
+                            if (data.predictive_alerts && data.predictive_alerts.length > 0) {
+                                alertBox.style.display = "block";
+                                alertBox.innerHTML = `<strong>⚠️ PREDICTIVE WARNING:</strong><br>` + data.predictive_alerts.join('<br>');
+                                showToast("CRITICAL TRAJECTORY DETECTED", "warning");
+                            } else {
+                                alertBox.style.display = "block";
+                                alertBox.style.borderColor = "#22c55e";
+                                alertBox.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
+                                alertBox.style.color = "#86efac";
+                                alertBox.innerHTML = "<strong>✅ TRAJECTORY STABLE:</strong> No critical events predicted in the next 48 hours.";
+                            }
+                        }
+                    }, 1200); // Artificial delay to make it look like heavy AI processing
+
+                } catch (error) {
+                    console.error(error);
+                    loadingDiv.textContent = "Error communicating with Prediction Engine.";
+                    btn.textContent = "RETRY";
+                }
             });
         });
     </script>

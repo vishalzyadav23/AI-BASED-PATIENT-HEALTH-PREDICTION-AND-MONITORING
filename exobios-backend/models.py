@@ -19,6 +19,27 @@ class User(Base):
     
     role = Column(String, default="Paramedic")
 
+class PatientAccount(Base):
+    """Patient self-registration and login account"""
+    __tablename__ = "patient_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    age = Column(Integer, nullable=True)
+    gender = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    
+    # Account status
+    is_active = Column(Integer, default=1)
+    is_verified = Column(Integer, default=0)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 class Patient(Base):
     __tablename__ = "patients"
 

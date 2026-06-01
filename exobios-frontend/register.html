@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthSync Pro - Patient Login</title>
+    <title>HealthSync Pro - Create Account</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="design-system.css">
     <style>
-        /* Login Page Specific Styles */
-        .login-container {
+        /* Registration Page Specific Styles */
+        .register-container {
             min-height: 100vh;
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -21,7 +21,7 @@
             z-index: 1;
         }
 
-        .login-hero {
+        .register-hero {
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
             display: flex;
             flex-direction: column;
@@ -32,7 +32,7 @@
             overflow: hidden;
         }
 
-        .login-hero::before {
+        .register-hero::before {
             content: '';
             position: absolute;
             width: 300px;
@@ -44,7 +44,7 @@
             animation: float 20s ease-in-out infinite;
         }
 
-        .login-hero::after {
+        .register-hero::after {
             content: '';
             position: absolute;
             width: 200px;
@@ -99,7 +99,7 @@
             animation: slideUp 800ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
         }
 
-        .login-form-wrapper {
+        .register-form-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -107,9 +107,11 @@
             padding: var(--sp-3xl) var(--sp-2xl);
             background: var(--bg-card);
             backdrop-filter: blur(10px);
+            overflow-y: auto;
+            max-height: 100vh;
         }
 
-        .login-form {
+        .register-form {
             width: 100%;
             max-width: 380px;
         }
@@ -128,7 +130,8 @@
             letter-spacing: 0.5px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 12px 16px;
             background: rgba(15, 23, 42, 0.5);
@@ -140,28 +143,30 @@
             transition: all var(--transition-fast);
         }
 
-        .form-group input::placeholder {
+        .form-group input::placeholder,
+        .form-group select {
             color: var(--text-muted);
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: var(--accent-500);
             background: rgba(15, 23, 42, 0.8);
             box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
         }
 
-        .login-header {
+        .register-header {
             margin-bottom: var(--sp-2xl);
             text-align: center;
         }
 
-        .login-header h2 {
+        .register-header h2 {
             margin-bottom: var(--sp-sm);
             color: var(--text-primary);
         }
 
-        .login-header p {
+        .register-header p {
             color: var(--text-muted);
             font-size: 0.95rem;
         }
@@ -176,35 +181,49 @@
             flex: 1;
         }
 
-        .login-footer {
+        .register-footer {
             text-align: center;
             margin-top: var(--sp-xl);
             padding-top: var(--sp-lg);
             border-top: 1px solid var(--border-light);
         }
 
-        .login-footer p {
+        .register-footer p {
             color: var(--text-muted);
             margin-bottom: var(--sp-sm);
         }
 
-        .login-footer a {
+        .register-footer a {
             color: var(--primary-500);
             font-weight: 600;
             transition: color var(--transition-fast);
         }
 
-        .login-footer a:hover {
+        .register-footer a:hover {
             color: var(--primary-600);
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            transition: all 300ms ease;
+            width: 0%;
         }
 
         /* Responsive Design */
         @media (max-width: 1024px) {
-            .login-container {
+            .register-container {
                 grid-template-columns: 1fr;
             }
 
-            .login-hero {
+            .register-hero {
                 min-height: 300px;
                 padding: var(--sp-2xl);
             }
@@ -215,11 +234,11 @@
         }
 
         @media (max-width: 640px) {
-            .login-form-wrapper {
+            .register-form-wrapper {
                 padding: var(--sp-2xl) var(--sp-lg);
             }
 
-            .login-form {
+            .register-form {
                 max-width: 100%;
             }
 
@@ -231,39 +250,14 @@
                 font-size: 1.75rem;
             }
         }
-
-        /* Animations */
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
-        }
     </style>
 </head>
 
 <body>
     <div class="medical-bg"></div>
 
-    <div class="login-container">
-        <section class="login-hero" aria-labelledby="hero-title">
+    <div class="register-container">
+        <section class="register-hero" aria-labelledby="hero-title">
             <div class="hero-content">
                 <div class="hero-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -274,45 +268,78 @@
                     </svg>
                 </div>
                 <h1 id="hero-title">HealthSync Pro</h1>
-                <p>Monitor your health in real-time. Track vitals, get predictions, stay informed.</p>
+                <p>Join thousands monitoring their health in real-time. Start your wellness journey today.</p>
             </div>
         </section>
 
-        <section class="login-form-wrapper" aria-labelledby="login-title">
-            <div class="login-form">
-                <div class="login-header">
-                    <h2 id="login-title">Welcome Back</h2>
-                    <p>Sign in to your patient account</p>
+        <section class="register-form-wrapper" aria-labelledby="register-title">
+            <div class="register-form">
+                <div class="register-header">
+                    <h2 id="register-title">Create Account</h2>
+                    <p>Start your health monitoring journey</p>
                 </div>
 
-                <form id="login-form" aria-label="Patient login form">
+                <form id="register-form" aria-label="Registration form">
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="first-name">First Name</label>
+                            <input type="text" id="first-name" name="first_name" placeholder="John" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="last-name">Last Name</label>
+                            <input type="text" id="last-name" name="last_name" placeholder="Doe" required>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label for="email">Email Address / ID</label>
-                        <input type="text" id="email" name="email" placeholder="you@example.com" required
-                            aria-required="true">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" placeholder="25" min="18" max="120" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder="••••••••" required
-                            aria-required="true">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="strength-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm_password" placeholder="••••••••"
+                            required>
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" style="background: #22c55e; color: white;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M5 12h14M12 5l7 7-7 7" />
                             </svg>
-                            Sign In
+                            Create Account
                         </button>
                         <button type="reset" class="btn btn-ghost">Clear</button>
                     </div>
                 </form>
 
-                <div class="login-footer">
-                    <p>Forgot your password? <a href="#" id="forgot-password-link">Reset it here</a></p>
-                    <p>New to HealthSync? <a href="register.html">Create an account</a></p>
+                <div class="register-footer">
+                    <p>Already have an account? <a href="index.html">Sign in here</a></p>
                 </div>
             </div>
         </section>
@@ -323,20 +350,14 @@
     <script>
         const API_BASE_URL = 'http://localhost:8000/api';
 
-        // Toast notification function
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.style.cssText = `
-                padding: 16px 20px;
-                margin-bottom: 10px;
+                padding: 16px 20px; margin-bottom: 10px; color: white; border-radius: 8px;
                 background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#3b82f6'};
-                color: white;
-                border-radius: 8px;
-                animation: slideInToast 300ms ease-out;
-                min-width: 300px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                font-family: 'Inter', sans-serif;
+                animation: slideInToast 300ms ease-out; min-width: 300px; font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: 'Inter', sans-serif;
             `;
             toast.textContent = message;
             container.appendChild(toast);
@@ -344,58 +365,78 @@
             setTimeout(() => {
                 toast.style.animation = 'slideOutToast 300ms ease-in';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, 5000);
         }
 
-        // Login form handler
-        document.getElementById('login-form').addEventListener('submit', async function (e) {
+        document.getElementById('password').addEventListener('input', function () {
+            const password = this.value;
+            const strengthBar = document.getElementById('strength-bar');
+            let strength = 0;
+
+            if (password.length >= 8) strength += 25;
+            if (password.length >= 12) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 10;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 15;
+
+            strength = Math.min(100, strength);
+            strengthBar.style.width = strength + '%';
+            strengthBar.style.background = strength < 40 ? '#ef4444' : strength < 70 ? '#f59e0b' : '#22c55e';
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
+            const firstName = document.getElementById('first-name').value.trim();
+            const lastName = document.getElementById('last-name').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
             const submitBtn = this.querySelector('button[type="submit"]');
 
-            if (!email || !password) {
-                showToast('Please enter email and password', 'error');
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match!', 'error');
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Signing in...';
+            submitBtn.textContent = 'Creating Account...';
+
+            // 🚀 FIX: Mapping the frontend data to strictly match the backend's UserCreate requirements
+            const payload = {
+                personnel_id: email, // Backend expects 'personnel_id' for the login system
+                name: `${firstName} ${lastName}`,
+                password: password,
+                phone: "0000000000", // Fallback required fields
+                pin_code: "000000",
+                area_location: "System",
+                region: "Global",
+                role: "Patient"
+            };
 
             try {
-                // 🚀 NEW LOGIC: Use Form Data to match FastAPI's built-in OAuth2 requirements
-                const formData = new URLSearchParams();
-                formData.append('username', email); // Must strictly be 'username' for OAuth2
-                formData.append('password', password);
-
-                const response = await fetch(`${API_BASE_URL}/login`, {
+                const response = await fetch(`${API_BASE_URL}/register`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    showToast('Login successful!', 'success');
-
-                    // Securely store tokens
-                    localStorage.setItem('exobios_token', data.access_token);
-                    if (data.user_id) localStorage.setItem('user_id', data.user_id);
-
-                    // Redirect to dashboard
+                if (response.ok || response.status === 201) {
+                    showToast('Account created successfully! Redirecting to login...', 'success');
                     setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
+                        window.location.href = 'index.html';
+                    }, 2000);
                 } else {
-                    // Gracefully parse validation errors
-                    let errorMessage = 'Login failed';
+                    // 🚀 FIX: Properly parsing the FastAPI Validation Error Array to avoid [object Object]
+                    let errorMessage = 'Registration failed';
                     if (data.detail) {
                         if (Array.isArray(data.detail)) {
-                            errorMessage = data.detail.map(err => err.msg).join(', ');
+                            errorMessage = data.detail.map(err => {
+                                const fieldName = err.loc[err.loc.length - 1];
+                                return `${fieldName}: ${err.msg}`;
+                            }).join(', ');
                         } else if (typeof data.detail === 'string') {
                             errorMessage = data.detail;
                         }
@@ -403,31 +444,18 @@
                     showToast(errorMessage, 'error');
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showToast('Connection error. Make sure backend is running on http://localhost:8000', 'error');
+                console.error('Registration error:', error);
+                showToast('Connection error. Make sure Uvicorn is running.', 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
-                    Sign In
+                    Create Account
                 `;
             }
         });
-
-        // Password reset link
-        document.getElementById('forgot-password-link').addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = 'reset-password.html';
-        });
-
-        // Demo login for testing
-        window.demoLogin = function () {
-            document.getElementById('email').value = 'demo@exobios.com';
-            document.getElementById('password').value = 'demo123';
-            document.getElementById('login-form').dispatchEvent(new Event('submit'));
-        };
     </script>
 </body>
 
