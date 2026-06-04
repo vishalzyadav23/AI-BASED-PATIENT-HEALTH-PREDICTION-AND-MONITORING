@@ -18,7 +18,7 @@
 const char* ssid = "iPhone";       
 const char* password = "12345678";
 // CHANGE THIS IP TO YOUR LAPTOP'S CURRENT IPV4 ADDRESS!
-const char* serverName = "http://172.20.10.11:8000/api/telemetry/stream";
+const char* serverName = "http://172.20.10.2:8000/api/telemetry/stream";
 
 /* --- 2. SENSOR VARIABLES --- */
 float temperature, humidity, bodytemperature;

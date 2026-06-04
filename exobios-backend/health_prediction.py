@@ -230,7 +230,8 @@ class HealthPredictionModel:
                                        spo2: int,
                                        temperature: float,
                                        symptoms: str = "",
-                                       medical_history: str = "") -> Dict:
+                                       medical_history: str = "",
+                                       patient_id: str = None) -> Dict:
         """
         Perform comprehensive health assessment across multiple conditions.
         Returns all risk assessments and an overall health score.
@@ -283,6 +284,7 @@ class HealthPredictionModel:
                 "temperature": temperature
             },
             "patient_info": {
+                "patient_id": patient_id,
                 "age": age,
                 "sex": sex,
                 "symptoms": symptoms,

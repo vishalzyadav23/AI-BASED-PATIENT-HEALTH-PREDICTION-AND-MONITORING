@@ -774,7 +774,16 @@
                 console.error("Token decoding failed", e);
             }
 
-            let currentPatientName = "UNKNOWN";
+            // Object to hold all patient info for the PDF
+            let currentPatient = {
+                name: "UNKNOWN",
+                age: "--",
+                sex: "--",
+                medical_history: "None reported",
+                medications: "None",
+                symptoms: "None reported"
+            };
+
             try {
                 const response = await fetch(`${API_BASE}/patients/latest`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -782,8 +791,18 @@
 
                 if (response.ok) {
                     const patient = await response.json();
-                    currentPatientName = patient.name.toUpperCase();
-                    document.getElementById('display-patient-name').textContent = `TRIAGE RESULTS: ${currentPatientName}`;
+
+                    // Save all fields to our object
+                    currentPatient.name = patient.name ? patient.name.toUpperCase() : "UNKNOWN";
+                    currentPatient.age = patient.age || "--";
+                    currentPatient.sex = patient.sex || "--";
+
+                    // Accommodating different possible API field names
+                    currentPatient.medical_history = patient.medical_history || patient.past_medical_history || "None reported";
+                    currentPatient.medications = patient.medications || patient.current_medications || "None";
+                    currentPatient.symptoms = patient.symptoms || patient.reported_symptoms || "None reported";
+
+                    document.getElementById('display-patient-name').textContent = `TRIAGE RESULTS: ${currentPatient.name}`;
                 } else {
                     document.getElementById('display-patient-name').textContent = `TRIAGE RESULTS: UNKNOWN PATIENT`;
                 }
@@ -861,7 +880,6 @@
             // 🚀 NEW: WEBSOCKET TELEMETRY STREAM
             // ==========================================
             function connectWebSocket() {
-                // Safely extract the domain/port from API_BASE and swap http for ws
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsHost = API_BASE.replace(/^https?:\/\//i, '');
                 const wsUrl = `${wsProtocol}//${wsHost}/telemetry/ws`;
@@ -888,7 +906,6 @@
 
                         if (parseInt(data.bpm) > 120 || parseInt(data.spo2) < 90) activateEmergencyMode();
 
-                        // Instantly update Chart.js with zero latency
                         vitalsChart.data.datasets[0].data.shift();
                         vitalsChart.data.datasets[1].data.shift();
                         vitalsChart.data.datasets[0].data.push(data.bpm);
@@ -904,11 +921,10 @@
                 ws.onclose = function () {
                     console.log("WebSocket Disconnected. Attempting to reconnect in 3 seconds...");
                     isChartConnected = false;
-                    setTimeout(connectWebSocket, 3000); // Auto-reconnect
+                    setTimeout(connectWebSocket, 3000);
                 };
             }
 
-            // Start the WebSocket!
             connectWebSocket();
 
             document.getElementById('btn-download-pdf').addEventListener('click', () => {
@@ -928,13 +944,24 @@
                 const paramedicId = document.getElementById('paramedic-name').textContent.replace('Paramedic: ', '');
                 const timestamp = new Date().toLocaleString();
 
+                // Dynamic Header with real patient data
                 headerDiv.innerHTML = `
-                    <h2 style="color: #38bdf8; margin-top: 0; font-size: 20px;">AI BASED PATIENT HEALTH PREDICTION & MONITORING REPORT</h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: #cbd5e1; font-size: 14px;">
-                        <div><strong>PATIENT NAME:</strong> ${currentPatientName}</div>
-                        <div><strong>ATTENDING PARAMEDIC:</strong> ${paramedicId}</div>
-                        <div><strong>REPORT GENERATED:</strong> ${timestamp}</div>
-                        <div><strong>SYSTEM STATUS:</strong> SECURE TELEMETRY ACTIVE</div>
+                    <h2 style="color: #38bdf8; margin-top: 0; margin-bottom: 15px; font-size: 20px; text-transform: uppercase;">AI Clinical Triage Report</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: #cbd5e1; font-size: 14px; margin-bottom: 15px;">
+                        <div><strong style="color: #94a3b8;">PATIENT NAME:</strong> <span style="color: #fff;">${currentPatient.name}</span></div>
+                        <div><strong style="color: #94a3b8;">PARAMEDIC:</strong> <span style="color: #fff;">${paramedicId}</span></div>
+                        <div><strong style="color: #94a3b8;">AGE / SEX:</strong> <span style="color: #fff;">${currentPatient.age} / ${currentPatient.sex}</span></div>
+                        <div><strong style="color: #94a3b8;">TIMESTAMP:</strong> <span style="color: #fff;">${timestamp}</span></div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">Clinical Context & Intake Data</h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #e2e8f0;">
+                            <div><strong style="color: #94a3b8; width: 130px; display: inline-block;">Reported Symptoms:</strong> ${currentPatient.symptoms}</div>
+                            <div><strong style="color: #94a3b8; width: 130px; display: inline-block;">Medical History:</strong> ${currentPatient.medical_history}</div>
+                            <div><strong style="color: #94a3b8; width: 130px; display: inline-block;">Current Meds:</strong> ${currentPatient.medications}</div>
+                        </div>
                     </div>
                 `;
 
@@ -942,7 +969,7 @@
 
                 const opt = {
                     margin: 0.5,
-                    filename: `AI_Health_Handoff_${currentPatientName}.pdf`,
+                    filename: `AI_Health_Handoff_${currentPatient.name}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, backgroundColor: '#0f172a' },
                     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -978,7 +1005,6 @@
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
                 try {
-                    // Fetching AI Chat response using Live API
                     const response = await fetch(`${API_BASE}/chat`, {
                         method: 'POST',
                         headers: {
@@ -1021,7 +1047,6 @@
                 resultsDiv.style.display = "none";
 
                 try {
-                    // Assuming patient ID 1 for the demo
                     const response = await fetch(`${API_BASE}/predict/trajectory/1?days_ahead=2`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
@@ -1038,12 +1063,10 @@
                         } else {
                             resultsDiv.style.display = "block";
 
-                            // Update the numbers
                             document.getElementById('proj-hr').textContent = data.predicted_vitals.heart_rate;
                             document.getElementById('proj-bp').textContent = data.predicted_vitals.systolic_bp;
                             document.getElementById('proj-spo2').textContent = data.predicted_vitals.spo2 + "%";
 
-                            // Update the alerts
                             const alertBox = document.getElementById('prediction-alerts');
                             if (data.predictive_alerts && data.predictive_alerts.length > 0) {
                                 alertBox.style.display = "block";
@@ -1057,7 +1080,7 @@
                                 alertBox.innerHTML = "<strong>✅ TRAJECTORY STABLE:</strong> No critical events predicted in the next 48 hours.";
                             }
                         }
-                    }, 1200); // Artificial delay to make it look like heavy AI processing
+                    }, 1200);
 
                 } catch (error) {
                     console.error(error);

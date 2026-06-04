@@ -151,6 +151,21 @@ def create_patient(
     db.refresh(db_patient)
     return db_patient
 
+# 🚀 NEW ENDPOINT ADDED HERE: Must be above /{patient_id}
+@router.get("/patients/latest", response_model=schemas.PatientResponse)
+def get_latest_patient(
+    token: str = Depends(security.oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """Get the most recently created patient for the Results dashboard"""
+    current_user = get_current_user(token, db)
+    
+    # Grab the newest patient from the database
+    latest_patient = db.query(models.Patient).order_by(models.Patient.id.desc()).first()
+    if not latest_patient:
+        raise HTTPException(status_code=404, detail="No patients found")
+        
+    return latest_patient
 
 @router.get("/patients/{patient_id}", response_model=schemas.PatientDetailedProfile)
 def get_patient_profile(
